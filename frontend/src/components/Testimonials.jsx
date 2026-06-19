@@ -14,7 +14,16 @@ export default function Testimonials() {
       <div className="wrap py-20 sm:py-24">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeader eyebrow="Testimonials" heading="What our partners say" />
-          <Reveal delay={80} className="shrink-0">
+          <Reveal delay={80} className="shrink-0 md:flex-col place-items-center gap-4">
+
+            {/* Slide counter */}
+            <p className="mt-5 font-outfit text-xs w-14">
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <span className="text-3xl"> /  </span>
+              <span>{String(total).padStart(2, "0")}</span>            
+            </p>
+
+
             <CarouselControls
               total={total}
               current={index}
@@ -26,7 +35,7 @@ export default function Testimonials() {
         </div>
 
         <Reveal key={index} className="mt-12">
-          <blockquote className="rounded-2xl border border-black/5 bg-mist p-8 sm:p-10 lg:p-12">
+          <blockquote className="rounded-none border border-black/5 bg-mist p-8 sm:p-10 lg:p-12">
             {/* Large decorative quote mark */}
             <svg
               className="mb-5 text-teal-500/30"
@@ -62,9 +71,9 @@ export default function Testimonials() {
         </Reveal>
 
         {/* Slide counter */}
-        <p className="mt-5 font-mono text-xs text-slatey">
+        {/* <p className="mt-5 font-mono text-xs text-slatey">
           {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-        </p>
+        </p> */}
       </div>
     </section>
   );

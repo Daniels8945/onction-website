@@ -11,7 +11,7 @@ export default function Solutions() {
     <section id="solutions" className="scroll-mt-20 bg-mist">
       <div className="wrap py-20 sm:py-24">
         <SectionHeader
-          eyebrow={solutions.eyebrow}
+          // eyebrow={solutions.eyebrow}
           heading={solutions.heading}
           intro={solutions.intro}
         />

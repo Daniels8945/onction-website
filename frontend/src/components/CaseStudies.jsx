@@ -57,8 +57,8 @@ export default function CaseStudies() {
 
 function CaseCard({ study }) {
   return (
-    <article className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur transition hover:border-teal-500/40 hover:bg-white/[0.07]">
-      <p className="font-mono text-xs uppercase tracking-[0.18em] text-teal-400">
+    <article className="flex h-full flex-col rounded-none border border-white/10 bg-white/[0.04] p-6 backdrop-blur transition hover:border-teal-500/40 hover:bg-white/[0.07]">
+      <p className="font-outfit text-xs uppercase tracking-[0.18em] text-teal-400">
         {study.category}
       </p>
       <h3 className="mt-3 flex-1 text-base font-semibold leading-snug text-white sm:text-[17px]">

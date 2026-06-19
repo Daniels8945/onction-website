@@ -41,11 +41,23 @@ export default function Enquiry() {
   }
 
   return (
-    <section id="enquire" className="scroll-mt-20 bg-white">
-      <div className="wrap grid gap-12 py-20 sm:py-24 lg:grid-cols-[1fr_1.15fr]">
+    <section id="enquire" className="relative isolate scroll-mt-20 overflow-hidden bg-white">
+      {/* Gradient + grain texture — soft colour blobs under a low-opacity
+          fractal-noise overlay, instead of a flat white fill. */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <svg className="absolute inset-0 h-full w-full opacity-[0.05]">
+          <filter id="enquiryNoise">
+            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#enquiryNoise)" />
+        </svg>
+      </div>
+
+      <div className="wrap relative grid gap-12 py-20 sm:py-24 lg:grid-cols-[1fr_1.15fr]">
         {/* contact rail */}
         <Reveal>
-          <p className="eyebrow mb-3">Enquire now</p>
+          <p className="eyebrow mb-3 font-outline">Enquire now</p>
           <h2 className="text-3xl font-semibold leading-tight text-navy-900 sm:text-4xl">
             Want to partner to build a sustainable energy sector?
           </h2>
@@ -58,7 +70,7 @@ export default function Enquiry() {
               href={`tel:${company.phoneHref}`}
               className="flex items-center gap-4 text-navy-900 hover:text-teal-600"
             >
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-mist text-teal-600">
+              <span className="grid h-11 w-11 place-items-center rounded-none bg-mist text-teal-600">
                 <Phone width={20} height={20} />
               </span>
               <span className="font-medium">{company.phone}</span>
@@ -67,18 +79,18 @@ export default function Enquiry() {
               href={`mailto:${company.email}`}
               className="flex items-center gap-4 text-navy-900 hover:text-teal-600"
             >
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-mist text-teal-600">
+              <span className="grid h-11 w-11 place-items-center rounded-none bg-mist text-teal-600">
                 <Mail width={20} height={20} />
               </span>
               <span className="font-medium">{company.email}</span>
             </a>
             {company.offices.map((o) => (
               <div key={o.label} className="flex items-start gap-4 text-ink/80">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-mist text-teal-600">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-none bg-mist text-teal-600">
                   <Pin width={20} height={20} />
                 </span>
                 <span className="text-sm leading-snug">
-                  <span className="block font-mono text-xs uppercase tracking-wide text-slatey">
+                  <span className="block font-mono text-xs uppercase tracking-wide text-slatey font-outfit">
                     {o.label}
                   </span>
                   {o.lines.map((l) => (
@@ -94,11 +106,11 @@ export default function Enquiry() {
 
         {/* form */}
         <Reveal delay={120}>
-          <div className="rounded-2xl border border-black/5 bg-mist p-6 sm:p-8">
+          <div className="rounded-none border border-black/5 bg-mist p-6 sm:p-8">
             {status === "success" ? (
               <div className="grid min-h-[420px] place-items-center text-center">
                 <div>
-                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-teal-500 text-navy-950">
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-none bg-teal-500 text-navy-950">
                     <Arrow width={24} height={24} />
                   </div>
                   <h3 className="mt-5 text-xl font-semibold text-navy-900">
@@ -129,7 +141,7 @@ export default function Enquiry() {
                   <select
                     value={form.country}
                     onChange={update("country")}
-                    className="w-full rounded-lg border border-black/10 bg-white px-3.5 py-2.5 text-sm text-ink outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+                    className="w-full rounded-none border border-black/10 bg-white px-3.5 py-2.5 text-sm text-ink outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
                   >
                     <option value="">Select a country</option>
                     {countries.map((c) => (
@@ -148,7 +160,7 @@ export default function Enquiry() {
                     rows={4}
                     value={form.message}
                     onChange={update("message")}
-                    className="w-full resize-none rounded-lg border border-black/10 bg-white px-3.5 py-2.5 text-sm text-ink outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+                    className="w-full resize-none rounded-none border border-black/10 bg-white px-3.5 py-2.5 text-sm text-ink outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
                     placeholder="Tell us a little about what you need…"
                   />
                 </label>
@@ -162,7 +174,7 @@ export default function Enquiry() {
                 <button
                   onClick={onSubmit}
                   disabled={!valid || status === "loading"}
-                  className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+                  className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50 rounded-none"
                 >
                   {status === "loading" ? "Sending…" : "Send message"}
                   {status !== "loading" && <Arrow width={18} height={18} />}
@@ -190,7 +202,7 @@ function Field({ label, required, type = "text", value, onChange, placeholder })
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-black/10 bg-white px-3.5 py-2.5 text-sm text-ink outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+        className="w-full rounded-none border border-black/10 bg-white px-3.5 py-2.5 text-sm text-ink outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
       />
     </label>
   );

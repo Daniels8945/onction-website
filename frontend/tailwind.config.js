@@ -32,6 +32,7 @@ export default {
         mono: ['"IBM Plex Mono"', "ui-monospace", "monospace"],
         heading: ['"Outfit"', "system-ui", "sans-serif"],
         outfit: ['"Outfit"', "system-ui", "sans-serif"],
+        syne: ['"Syne"', "system-ui", "sans-serif"],
       },
       maxWidth: {
         wrap: "1600px",

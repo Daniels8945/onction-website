@@ -48,14 +48,14 @@ export default function Footer() {
             <a
               href="#"
               aria-label="Onction Energy on LinkedIn"
-              className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 text-white/60 ring-1 ring-white/10 transition hover:bg-teal-500/20 hover:text-teal-400"
+              className="grid h-9 w-9 place-items-center rounded-none bg-white/5 text-white/60 ring-1 ring-white/10 transition hover:bg-teal-500/20 hover:text-teal-400"
             >
               <LinkedIn />
             </a>
             <a
               href="#"
               aria-label="Onction Energy on X / Twitter"
-              className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 text-white/60 ring-1 ring-white/10 transition hover:bg-teal-500/20 hover:text-teal-400"
+              className="grid h-9 w-9 place-items-center rounded-none bg-white/5 text-white/60 ring-1 ring-white/10 transition hover:bg-teal-500/20 hover:text-teal-400"
             >
               <Twitter />
             </a>
@@ -77,7 +77,7 @@ export default function Footer() {
         <div className="wrap grid gap-6 py-8 text-xs text-white/45 sm:grid-cols-2 lg:grid-cols-[auto_auto_1fr]">
           {company.offices.map((o) => (
             <div key={o.label}>
-              <p className="mb-1 font-mono uppercase tracking-wide text-teal-400/70">
+              <p className="mb-1 font-outfit uppercase tracking-wide text-teal-400/70">
                 {o.label}
               </p>
               {o.lines.map((l) => (
@@ -107,7 +107,7 @@ export default function Footer() {
 function FooterCol({ heading, links }) {
   return (
     <div>
-      <h4 className="font-mono text-xs uppercase tracking-[0.2em] text-teal-400">{heading}</h4>
+      <h4 className="font-syne text-lg font-bold uppercase  text-teal-400">{heading}</h4>
       <ul className="mt-4 space-y-2.5 text-sm">
         {links.map((l) => (
           <li key={l.label}>

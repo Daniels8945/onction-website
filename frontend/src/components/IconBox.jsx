@@ -13,7 +13,7 @@ export default function IconBox({ icon: Icon, variant = "dark", size = "md", cla
 
   return (
     <span
-      className={`grid shrink-0 ${dim} place-items-center rounded-xl transition ${variants[variant]} ${className}`}
+      className={`grid shrink-0 ${dim} place-items-center rounded-none transition ${variants[variant]} ${className}`}
     >
       <Icon width={iconPx} height={iconPx} />
     </span>

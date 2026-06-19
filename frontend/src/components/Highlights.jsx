@@ -17,7 +17,7 @@ export default function Highlights() {
             const Icon = hlIcons[idx % hlIcons.length];
             return (
               <Reveal key={item.title} delay={(idx % 3) * 80}>
-                <div className="flex h-full gap-4 rounded-2xl border border-black/5 bg-white p-6">
+                <div className="flex h-full gap-4 rounded-none border border-black/5 bg-white p-6">
                   <IconBox icon={Icon} variant="light" />
                   <div>
                     <h3 className="text-base font-semibold text-navy-900">{item.title}</h3>

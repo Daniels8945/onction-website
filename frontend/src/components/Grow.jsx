@@ -17,7 +17,7 @@ export default function Grow() {
             const Icon = pillarIcons[idx % pillarIcons.length];
             return (
               <Reveal key={p.title} delay={idx * 80}>
-                <div className="group h-full overflow-hidden rounded-2xl bg-navy-900 p-6 text-white transition hover:bg-navy-800">
+                <div className="group h-full overflow-hidden rounded-none bg-navy-900 p-6 text-white transition hover:bg-navy-800">
                   <IconBox icon={Icon} variant="ghost" size="lg" />
                   <h3 className="mt-5 text-lg font-semibold">{p.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-white/70">{p.body}</p>

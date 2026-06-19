@@ -11,18 +11,19 @@ export default function SectionHeader({
   introClassName = "",
 }) {
   return (
-    <Reveal className={className}>
+    // apply Outfit font to the section container so P and body text inherit it
+    <Reveal className={`${className} font-outfit`}>
       <p className={light ? "eyebrow-light mb-3" : "eyebrow mb-3"}>{eyebrow}</p>
-      <h2
-        className={`max-w-2xl text-3xl font-semibold leading-tight sm:text-4xl ${
+      <h1
+        className={`max-w-2xl text-3xl font-medium font-syne sm:text-5xl ${
           light ? "text-white" : "text-navy-900"
         }`}
       >
         {heading}
-      </h2>
+      </h1>
       {intro && (
         <p
-          className={`mt-4 max-w-2xl leading-relaxed ${
+          className={`mt-4 max-w-2xl font-outfit leading-relaxed ${
             light ? "text-white/75" : "text-slatey"
           } ${introClassName}`}
         >

@@ -22,7 +22,7 @@ export default function Capability() {
             {Array.from({ length: 28 }).map((_, k) => (
               <span
                 key={k}
-                className="w-1 rounded-full bg-teal-500/30"
+                className="w-1 rounded-none bg-teal-500/30"
                 style={{
                   height: `${18 + Math.abs(Math.sin(k * 0.7)) * 34}px`,
                   background: k % 5 === 0 ? "#13C2B6" : undefined,
@@ -33,10 +33,10 @@ export default function Capability() {
         </div>
 
         <Reveal delay={120}>
-          <ul className="divide-y divide-white/10 rounded-2xl border border-white/10 bg-white/[0.03]">
+          <ul className="divide-y divide-white/10 rounded-none border border-white/10 bg-white/[0.03]">
             {capability.items.map((item, idx) => (
               <li key={item} className="flex items-start gap-4 p-5">
-                <span className="mt-0.5 font-mono text-sm text-teal-400">
+                <span className="mt-0.5 font-outfit text-sm text-[#f8f5ec]/80">
                   {String(idx + 1).padStart(2, "0")}
                 </span>
                 <span className="flex-1 text-[15px] leading-snug text-white/90">{item}</span>
