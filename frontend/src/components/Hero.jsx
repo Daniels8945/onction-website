@@ -85,10 +85,12 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* ── Navigation row: counter + dots + square arrows ── */}
-        <div className="mt-14 flex items-center md:gap-24">
-          <div className="md:flex-col flex md:gap-6">
-            <span className="w-14 font-outfit text-lg text-[#f8f5ec] flex items-baseline">
+        {/* ── Navigation row: counter + dots + square arrows ──
+            Mobile: stacked vertically (counter, then dots, then buttons),
+            matching the reference. From sm up: spreads out horizontally. */}
+        <div className="mt-14 flex flex-col items-start gap-12 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6 md:gap-24">
+          <div className="flex flex-col gap-8 sm:gap-4">
+            <span className="flex items-baseline whitespace-nowrap font-outfit text-lg text-[#f8f5ec]">
               <span>{String(i + 1).padStart(2, "0")}</span>
               <span className="text-3xl"> /  </span>
               <span>{String(total).padStart(2, "0")}</span>
@@ -115,29 +117,30 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Square prev/next buttons */}
-          <div className="flex gap-4">
+          {/* Square prev/next buttons — compact on phones, full size from sm up */}
+          <div className="flex gap-2 sm:gap-4">
             <button
               onClick={prev}
               aria-label="Previous slide"
-              className="grid h-14 w-14 place-items-center rounded-none border border-[#f8f5ec] text-white/60 transition hover:border-teal-400 hover:text-teal-400"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-none border border-[#f8f5ec] text-white/60 transition hover:border-teal-400 hover:text-teal-400 sm:h-12 sm:w-12 md:h-14 md:w-14"
             >
               <Chevron dir="left" />
             </button>
             <button
               onClick={next}
               aria-label="Next slide"
-              className="grid h-14 w-14 place-items-center rounded-none border border-[#f8f5ec] text-white/60 transition hover:border-teal-400 hover:text-teal-400"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-none border border-[#f8f5ec] text-white/60 transition hover:border-teal-400 hover:text-teal-400 sm:h-12 sm:w-12 md:h-14 md:w-14"
             >
               <Chevron dir="right" />
             </button>
           </div>
         </div>
 
-        {/* Bottom-right wordmark watermark — TATA reference equivalent */}
-        <div className="pointer-events-none absolute bottom-6 right-0 hidden items-center gap-1.5 pr-[clamp(1.25rem,3vw,4rem)] text-xs uppercase tracking-[0.18em] text-white/40 sm:flex">
-          <span className="font-outfit font-bold text-lg text-[#f8f5ec]">Onction</span>
-          <span className="font-outfit text-lg text-white/70">Power Trading</span>
+        {/* Bottom-right wordmark watermark — TATA reference equivalent.
+            Visible on mobile too (just smaller), not hidden below sm. */}
+        <div className="pointer-events-none absolute bottom-4 right-0 flex items-center gap-1 pr-[clamp(1.25rem,3vw,4rem)] text-xs uppercase tracking-[0.18em] text-white/40 sm:bottom-6 sm:gap-1.5">
+          <span className="font-outfit text-sm font-bold text-[#f8f5ec] sm:text-lg">Onction</span>
+          <span className="font-outfit text-sm text-white/70 sm:text-lg">Power Trading</span>
         </div>
       </div>
     </section>

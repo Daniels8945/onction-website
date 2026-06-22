@@ -24,7 +24,7 @@ export default function CarouselControls({
   );
 
   const btnBase =
-    "grid h-9 w-9 place-items-center rounded-full border transition";
+    "grid h-9 w-9 place-items-center rounded-none border transition";
   const btnStyle = light
     ? "border-white/25 text-white/80 hover:border-teal-400 hover:text-teal-400"
     : "border-black/10 text-navy-900 hover:border-teal-500 hover:text-teal-500";

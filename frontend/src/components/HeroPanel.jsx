@@ -50,13 +50,15 @@ export default function HeroPanel() {
         <div className="wrap">
           <div className="grid grid-cols-1 divide-y divide-[#f8f5ec] md:grid-cols-[5fr_1px_7fr] md:divide-y-0">
 
-            {/* Quick Links — 30% column */}
-            <div className="py-10 w-2/4 md:w-auto">
-              <h3 className="mb-10  font-normal lg:text-4xl text-[#f8f5ec] font-syne">
+            {/* Quick Links — full width on mobile, 30% column from md up */}
+            <div className="py-10 w-full md:w-auto">
+              <h1 className="mb-10  lg:text-4xl text-[#f8f5ec] font-outfit">
                 Quick Links
-              </h3>
+              </h1>
 
-              <div className="grid grid-cols-2 gap-x-6 gap-y-6 mr-12">
+              {/* 2 columns at every breakpoint (matches the reference);
+                  tighter gap on phones so both columns fit comfortably. */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:gap-x-6 sm:gap-y-6 md:mr-12">
                 {quickLinks.map((l) => (
                   <a
                     key={l.label}
@@ -64,7 +66,7 @@ export default function HeroPanel() {
                     className="flex items-center justify-between text-[clamp(12px,1.5vw,17px)] font-regular text-[#f8f5ec] transition group">
 
                     {l.label}
-                    <FaArrowRightLong className="ml-2 text-[clamp(18px,2.2vw,18px)] text-teal-500 transition-transform duration-300 group-hover:translate-x-3 group-hover:scale-x-150"/>
+                    <FaArrowRightLong className="ml-2 text-[clamp(16px,2.2vw,22px)] text-teal-500 transition-transform duration-300 group-hover:translate-x-3 group-hover:scale-x-150"/>
                   </a>
                 ))}
               </div>

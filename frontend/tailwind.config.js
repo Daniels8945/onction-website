@@ -3,6 +3,11 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
+      screens: {
+        // Default scale has no exact 1200px step (md=768, lg=1024, xl=1280) —
+        // this gives an exact "wide:" variant for the footer's column switch.
+        wide: "1200px",
+      },
       colors: {
         // Onction navy / teal brand system
         navy: {

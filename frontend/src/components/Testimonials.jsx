@@ -12,27 +12,7 @@ export default function Testimonials() {
   return (
     <section className="scroll-mt-20 bg-white" {...pauseHandlers}>
       <div className="wrap py-20 sm:py-24">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <SectionHeader eyebrow="Testimonials" heading="What our partners say" />
-          <Reveal delay={80} className="shrink-0 md:flex-col place-items-center gap-4">
-
-            {/* Slide counter */}
-            <p className="mt-5 font-outfit text-xs w-14">
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <span className="text-3xl"> /  </span>
-              <span>{String(total).padStart(2, "0")}</span>            
-            </p>
-
-
-            <CarouselControls
-              total={total}
-              current={index}
-              onPrev={prev}
-              onNext={next}
-              onChange={setIndex}
-            />
-          </Reveal>
-        </div>
+        <SectionHeader eyebrow="Testimonials" heading="What our partners say" />
 
         <Reveal key={index} className="mt-12">
           <blockquote className="rounded-none border border-black/5 bg-mist p-8 sm:p-10 lg:p-12">
@@ -70,10 +50,22 @@ export default function Testimonials() {
           </blockquote>
         </Reveal>
 
-        {/* Slide counter */}
-        {/* <p className="mt-5 font-mono text-xs text-slatey">
-          {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-        </p> */}
+        {/* Counter + prev/next/dots — sits below the quote */}
+        <Reveal delay={80} className="mt-8 flex items-center justify-end gap-5">
+          {/* <span className="flex items-baseline whitespace-nowrap font-outfit text-xs text-slatey">
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <span className="text-xl"> / </span>
+            <span>{String(total).padStart(2, "0")}</span>
+          </span> */}
+
+          <CarouselControls
+            total={total}
+            current={index}
+            onPrev={prev}
+            onNext={next}
+            onChange={setIndex}
+          />
+        </Reveal>
       </div>
     </section>
   );

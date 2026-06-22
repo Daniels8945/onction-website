@@ -17,14 +17,15 @@ export function OnctionMark({ size = 20, className = "", paddingBottom = 0 }) {
 
 export default function Logo() {
   return (
-    <a href="#" className="block place-items-center pl-1 pt-3" aria-label="Onction Energy home font-outfit">
-      <OnctionMark size={30} />
+    // flex flex-col + items-center stacks and centers the mark above the
+    // wordmark — "place-items-center" alone did nothing on a block element.
+    <a href="#" className="flex flex-col items-center pl-0 md:pl-1 pt-1 sm:pt-3" aria-label="Onction Energy home">
+      <OnctionMark size={30} className="object-contain w-[18px]" />
 
-      <div className="display md:text-[1vw] gap-1 flex font-outfit pt-1">
-        <span className="block font-black tracking-tight text-white">ONCTION</span>
-        <span className="block font-light text-white">ENERGY</span>
+      <div className="mt-1 flex items-center gap-1 font-outfit md:text-[1vw] text-[0.45rem]">
+        <span className="font-black tracking-tight text-white">ONCTION</span>
+        <span className="font-light text-white">ENERGY</span>
       </div>
-
     </a>
   );
 }

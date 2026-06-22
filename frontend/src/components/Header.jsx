@@ -5,9 +5,9 @@ import { Arrow } from "./icons.jsx";
 
 // ─── Inline icon atoms (no external dependency) ──────────────────────────────
 
-// Fluid icon size: scales smoothly with viewport width instead of jumping at
-// breakpoints — bigger on full-screen desktop, shrinks gracefully on mobile.
-const ICON_SIZE = "h-[clamp(24px,2.6vw,34px)] w-[clamp(24px,2.6vw,34px)]";
+// Fluid icon size: compact fixed size on phones (so 4 icons always fit),
+// then scales smoothly with viewport width from the sm breakpoint up.
+const ICON_SIZE = "h-5 w-5 sm:h-[clamp(24px,2.6vw,34px)] sm:w-[clamp(24px,2.6vw,34px)]";
 const ICON_STROKE = "2.1";
 
 function SearchIcon({ className = ICON_SIZE }) {
@@ -59,7 +59,7 @@ function HeaderIconBtn({ label, onClick, children }) {
     <button
       onClick={onClick}
       aria-label={label}
-      className="flex h-full items-center px-[clamp(1.1rem,2.2vw,2.4rem)] text-[#f8f5ec] transition-colors hover:text-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50"
+      className="flex h-full items-center px-2 text-[#f8f5ec] transition-colors hover:text-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50 sm:px-[clamp(1.1rem,2.2vw,2.4rem)]"
     >
       {children}
     </button>
