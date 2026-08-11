@@ -1,0 +1,18 @@
+// Fires a pageview beacon to the backend's public /api/analytics/track
+// endpoint. Uses sendBeacon where available so it survives the page
+// navigating away immediately after (SPA route changes).
+const API_BASE = import.meta.env.VITE_API_BASE || "";
+
+export function trackPageview(path) {
+  const payload = JSON.stringify({ path, referrer: document.referrer || undefined });
+  const url = `${API_BASE}/api/analytics/track`;
+
+  if (navigator.sendBeacon) {
+    const blob = new Blob([payload], { type: "application/json" });
+    navigator.sendBeacon(url, blob);
+    return;
+  }
+  fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true }).catch(
+    () => {}
+  );
+}

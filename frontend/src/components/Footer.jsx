@@ -1,5 +1,6 @@
 import { company, nav, solutions } from "../data/content.js";
 import { OnctionMark } from "./Logo.jsx";
+import NewsletterSignup from "./NewsletterSignup.jsx";
 
 const solutionLinks = solutions.items.slice(0, 5).map((s) => ({
   label: s.title,
@@ -7,10 +8,11 @@ const solutionLinks = solutions.items.slice(0, 5).map((s) => ({
 }));
 
 const resourceLinks = [
+  { label: "Market News", href: "/news" },
+  { label: "Events", href: "/events" },
   { label: "NERC licensing portal", href: "#" },
   { label: "WAPP market rules", href: "#" },
   { label: "UN SDG 7", href: "#" },
-  { label: "Market updates", href: "#" },
   { label: "Compliance & policies", href: "#" },
 ];
 
@@ -109,6 +111,17 @@ export default function Footer() {
             <FooterCol heading="Business Solutions" links={solutionLinks} />
             <FooterCol heading="Regulatory & Resources" links={resourceLinks} />
           </div>
+        </div>
+      </div>
+
+      {/* Newsletter signup */}
+      <div className="border-t border-white/10">
+        <div className="wrap flex flex-col items-center gap-4 py-10 text-center lg:flex-row lg:justify-between lg:text-left">
+          <div>
+            <h4 className="font-syne text-lg font-bold text-white">Market news, in your inbox</h4>
+            <p className="mt-1 text-sm text-white/55">Trading updates and event invitations — no spam, unsubscribe any time.</p>
+          </div>
+          <NewsletterSignup />
         </div>
       </div>
 

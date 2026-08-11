@@ -1,0 +1,7 @@
+# Replace with your real domain(s) before deploying — Caddy auto-provisions
+# and renews a Let's Encrypt certificate for whatever's listed here. DNS for
+# the domain must already point at the VPS's IP before this starts, or
+# certificate issuance will fail.
+onctionenergy.com, www.onctionenergy.com {
+    reverse_proxy frontend:80
+}

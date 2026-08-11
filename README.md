@@ -57,10 +57,40 @@ npm run build                      # outputs to frontend/dist
 Set `VITE_API_BASE` in `frontend/.env` to your deployed API URL, and add your
 production frontend origin to the CORS list in `backend/app/main.py`.
 
-## Next steps (when you expand beyond the landing page)
+## Admin dashboard
 
-- Add the inner pages: full **Services**, **About Us**, **GR0W**,
-  **Board of Directors**, **Contact**.
-- Add React Router for multi-page navigation.
-- Protect `GET /api/enquiries` with auth and build a small admin view.
-- Swap SQLite for Postgres for production.
+`/admin` (React Router, code-split from the public bundle) is a login-gated
+dashboard for running the site day-to-day:
+
+- **Analytics** — visitor traffic and enquiry/lead metrics, charted per the
+  project's dataviz standards.
+- **Enquiries** — the contact form submissions, in one table.
+- **Pages** — a block-based page builder (hero, text, image, video,
+  testimonial, CTA, gallery, metrics blocks) for publishing new pages
+  (e.g. `/services`, `/about`) beyond the landing page, without a redeploy.
+- **Media** — uploads images/video straight to S3-compatible object storage
+  (Contabo Object Storage in production).
+- **News** — a Market/Company News section with its own listing (`/news`)
+  and article pages, independent of the page builder.
+- **Events** — Onction events and industry events with public registration,
+  capacity limits, automatic waitlisting, and CSV export of registrants.
+- **Newsletter** — a subscriber list (public signup in the footer),
+  campaign composer, and one-click unsubscribe, sent over SMTP.
+- **Tasks** — an action-items board (to do / in progress / done) with
+  assignment across team accounts, for running day-to-day operations.
+- **Team** — manage who has dashboard access (multiple admin accounts).
+
+New enquiries and event registrations trigger an email alert to the admin
+inbox (`ALERT_EMAIL`) — see [backend/README.md](backend/README.md) for the
+SMTP configuration this depends on.
+
+See [backend/README.md](backend/README.md) for the API and
+[DEPLOY.md](DEPLOY.md) for standing the whole stack up on a VPS via Docker
+Compose (Postgres + backend + nginx + Caddy for automatic HTTPS).
+
+## Next steps
+
+- Drag-and-drop block reordering in the page builder (currently up/down
+  buttons — functional, just less slick).
+- Wire the existing landing-page sections (Hero, About, Metrics, etc.) up as
+  editable content too, not just net-new pages.

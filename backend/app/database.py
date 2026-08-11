@@ -1,13 +1,18 @@
 from sqlmodel import SQLModel, create_engine, Session
 
-# SQLite file lives alongside the app. For production swap the URL for
-# Postgres, e.g. postgresql+psycopg://user:pass@host/db
-DATABASE_URL = "sqlite:///./onction.db"
+from .config import get_settings
+
+settings = get_settings()
+DATABASE_URL = settings.database_url
+
+# SQLite needs check_same_thread=False for use with FastAPI's threaded
+# request handling; Postgres (used on the VPS in production) doesn't.
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
 engine = create_engine(
     DATABASE_URL,
     echo=False,
-    connect_args={"check_same_thread": False},
+    connect_args=connect_args,
 )
 
 

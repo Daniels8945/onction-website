@@ -1,3 +1,4 @@
+import { useSmoothAnchorScroll } from "./hooks/useSmoothAnchorScroll.js";
 import Header from "./components/Header.jsx";
 import Hero from "./components/Hero.jsx";
 import HeroPanel from "./components/HeroPanel.jsx";
@@ -14,6 +15,8 @@ import Enquiry from "./components/Enquiry.jsx";
 import Footer from "./components/Footer.jsx";
 
 export default function App() {
+  useSmoothAnchorScroll();
+
   return (
     <>
       <Header />
