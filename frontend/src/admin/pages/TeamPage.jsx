@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { adminApi } from "../lib/adminApi.js";
 import { useAuth } from "../AuthContext.jsx";
+import { useConfirmDialog } from "../hooks/useConfirmDialog.jsx";
 
 export default function TeamPage() {
   const { admin: currentAdmin } = useAuth();
   const [admins, setAdmins] = useState(null);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ email: "", full_name: "", password: "" });
+  const [form, setForm] = useState({ email: "", full_name: "", password: "", role: "Admin" });
   const [saving, setSaving] = useState(false);
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   function loadAdmins() {
     adminApi.get("/api/admin/users").then(setAdmins).catch((err) => setError(err.message));
@@ -19,31 +22,39 @@ export default function TeamPage() {
   async function handleCreate(e) {
     e.preventDefault();
     setSaving(true);
-    setError("");
     try {
       await adminApi.post("/api/admin/users", form);
-      setForm({ email: "", full_name: "", password: "" });
+      setForm({ email: "", full_name: "", password: "", role: "Admin" });
       setShowForm(false);
       loadAdmins();
+      toast.success("Account created.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDeactivate(id) {
-    if (!confirm("Deactivate this account? They'll no longer be able to sign in.")) return;
+    const ok = await confirm({
+      title: "Deactivate this account?",
+      message: "They'll no longer be able to sign in.",
+      confirmLabel: "Deactivate",
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       await adminApi.del(`/api/admin/users/${id}`);
       loadAdmins();
+      toast.success("Account deactivated.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
   return (
     <div>
+      {confirmDialog}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 font-syne text-2xl font-semibold text-ink">Team</h1>
@@ -83,6 +94,15 @@ export default function TeamPage() {
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             className="w-full border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
           />
+          <select
+            value={form.role}
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
+            className="w-full border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+          >
+            <option value="Admin">Admin — full access to the vendor platform</option>
+            <option value="Super Admin">Super Admin — can also clear the audit log</option>
+            <option value="Viewer">Viewer — read-only on the vendor platform</option>
+          </select>
           <p className="text-xs text-slatey">Share this password with them directly — there's no invite email yet.</p>
           <div className="flex gap-3">
             <button type="submit" disabled={saving} className="btn-primary disabled:opacity-60">
@@ -104,6 +124,7 @@ export default function TeamPage() {
               <tr>
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">Email</th>
+                <th className="px-4 py-3 font-medium">Role</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium"></th>
               </tr>
@@ -115,6 +136,7 @@ export default function TeamPage() {
                     {a.full_name || "—"} {a.id === currentAdmin?.id && <span className="text-xs text-slatey">(you)</span>}
                   </td>
                   <td className="px-4 py-3 text-slatey">{a.email}</td>
+                  <td className="px-4 py-3 text-slatey">{a.role}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`px-2 py-0.5 text-xs font-medium ${

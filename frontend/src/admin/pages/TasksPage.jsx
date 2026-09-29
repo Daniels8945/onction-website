@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { adminApi } from "../lib/adminApi.js";
+import { useConfirmDialog } from "../hooks/useConfirmDialog.jsx";
 
 const COLUMNS = [
   { status: "todo", label: "To do" },
@@ -113,6 +115,7 @@ export default function TasksPage() {
   const [admins, setAdmins] = useState([]);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   useEffect(() => {
     adminApi.get("/api/tasks").then(setTasks).catch((err) => setError(err.message));
@@ -124,8 +127,9 @@ export default function TasksPage() {
       const task = await adminApi.post("/api/tasks", payload);
       setTasks((prev) => [task, ...prev]);
       setShowForm(false);
+      toast.success("Task added.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
@@ -134,21 +138,25 @@ export default function TasksPage() {
       const updated = await adminApi.put(`/api/tasks/${task.id}`, { status });
       setTasks((prev) => prev.map((t) => (t.id === task.id ? updated : t)));
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
   async function handleDelete(task) {
+    const ok = await confirm({ title: `Delete "${task.title}"?`, confirmLabel: "Delete", destructive: true });
+    if (!ok) return;
     try {
       await adminApi.del(`/api/tasks/${task.id}`);
       setTasks((prev) => prev.filter((t) => t.id !== task.id));
+      toast.success("Task deleted.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
   return (
     <div>
+      {confirmDialog}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 font-syne text-2xl font-semibold text-ink">Tasks</h1>

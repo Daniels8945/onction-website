@@ -40,6 +40,7 @@ services:
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Onction Energy}
       ALERT_EMAIL: ${ALERT_EMAIL:-}
       PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-}
+      VENDOR_PORTAL_URL: ${VENDOR_PORTAL_URL:-}
 
   frontend:
     build: ./frontend

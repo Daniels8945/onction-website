@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { adminApi } from "../lib/adminApi.js";
+import { usePromptDialog } from "../hooks/usePromptDialog.jsx";
+import { useConfirmDialog } from "../hooks/useConfirmDialog.jsx";
 
 function slugify(title) {
   return title
@@ -15,6 +18,8 @@ export default function PagesListPage() {
   const [error, setError] = useState("");
   const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
+  const { prompt, dialog: promptDialog } = usePromptDialog();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   function loadPages() {
     adminApi
@@ -26,32 +31,40 @@ export default function PagesListPage() {
   useEffect(loadPages, []);
 
   async function handleCreate() {
-    const title = prompt("Page title (e.g. \"Our Services\")");
+    const title = await prompt({ title: "New page", label: "Page title", placeholder: 'e.g. "Our Services"' });
     if (!title) return;
     setCreating(true);
-    setError("");
     try {
       const page = await adminApi.post("/api/pages", { slug: slugify(title), title, status: "draft" });
       navigate(`/admin/pages/${page.id}`);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setCreating(false);
     }
   }
 
   async function handleDelete(id) {
-    if (!confirm("Delete this page and all its content? This can't be undone.")) return;
+    const ok = await confirm({
+      title: "Delete this page?",
+      message: "This deletes the page and all its content. This can't be undone.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       await adminApi.del(`/api/pages/${id}`);
       setPages((prev) => prev.filter((p) => p.id !== id));
+      toast.success("Page deleted.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
   return (
     <div>
+      {promptDialog}
+      {confirmDialog}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 font-syne text-2xl font-semibold text-ink">Pages</h1>

@@ -17,6 +17,14 @@ class Enquiry(SQLModel, table=True):
     message: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+    # Attribution — where the visitor who submitted this came from,
+    # resolved server-side from their tracking session at submit time.
+    # See analytics_utils.get_session_attribution.
+    utm_source: Optional[str] = Field(default=None, max_length=200)
+    utm_medium: Optional[str] = Field(default=None, max_length=200)
+    utm_campaign: Optional[str] = Field(default=None, max_length=200)
+    referrer_category: Optional[str] = Field(default=None, max_length=20)
+
 
 class EnquiryCreate(SQLModel):
     """Payload accepted from the frontend enquiry form."""
@@ -27,6 +35,9 @@ class EnquiryCreate(SQLModel):
     company: Optional[str] = Field(default=None, max_length=160)
     country: Optional[str] = Field(default=None, max_length=80)
     message: str = Field(min_length=1, max_length=4000)
+    # The browser's tracking session id (sessionStorage) — write-only, used
+    # to look up acquisition data, never stored on the Enquiry directly.
+    session_id: Optional[str] = Field(default=None, max_length=100)
 
 
 class EnquiryRead(SQLModel):
@@ -38,3 +49,7 @@ class EnquiryRead(SQLModel):
     country: Optional[str]
     message: str
     created_at: datetime
+    utm_source: Optional[str]
+    utm_medium: Optional[str]
+    utm_campaign: Optional[str]
+    referrer_category: Optional[str]

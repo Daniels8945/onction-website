@@ -3,5 +3,13 @@
 # the domain must already point at the VPS's IP before this starts, or
 # certificate issuance will fail.
 onctionenergy.com, www.onctionenergy.com {
-    reverse_proxy frontend:80
+	reverse_proxy frontend:80
+}
+
+# Vendor portal — same frontend container/build as the main site. The
+# frontend's React Router switches to the vendor-only route tree based on
+# hostname (see frontend/src/main.jsx), so this doesn't need its own image
+# or deployment, just its own DNS record and Caddy site block.
+vendors.onctionenergy.com {
+	reverse_proxy frontend:80
 }

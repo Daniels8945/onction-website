@@ -5,7 +5,26 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
 from .database import init_db
-from .routers import admin_users, analytics, auth, enquiries, events, media, news, newsletter, pages, tasks
+from .routers import (
+    admin_users,
+    analytics,
+    auth,
+    enquiries,
+    events,
+    invoices,
+    media,
+    news,
+    newsletter,
+    pages,
+    services,
+    tasks,
+    vendor_audit,
+    vendor_documents,
+    vendor_notifications,
+    vendor_platform_auth,
+    vendor_settings,
+    vendors,
+)
 
 settings = get_settings()
 
@@ -52,3 +71,11 @@ app.include_router(news.router)
 app.include_router(events.router)
 app.include_router(newsletter.router)
 app.include_router(tasks.router)
+app.include_router(vendors.router)
+app.include_router(invoices.router)
+app.include_router(vendor_documents.router)
+app.include_router(services.router)
+app.include_router(vendor_platform_auth.router)
+app.include_router(vendor_notifications.router)
+app.include_router(vendor_audit.router)
+app.include_router(vendor_settings.router)

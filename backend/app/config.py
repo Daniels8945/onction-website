@@ -58,6 +58,11 @@ class Settings(BaseSettings):
     alert_email: str = ""
     # Public site origin, used to build links in emails (unsubscribe, event pages).
     public_site_url: str = "http://localhost:5173"
+    # The vendor portal's own origin (served from vendors.<domain>, a separate
+    # subdomain from the main site — see Caddyfile), used to build links in
+    # vendor-facing emails (password reset). Kept separate from public_site_url
+    # since the two point at different hosts.
+    vendor_portal_url: str = "http://localhost:8080"
 
     @property
     def resolved_alert_email(self) -> str:

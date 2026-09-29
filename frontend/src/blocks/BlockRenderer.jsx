@@ -128,6 +128,84 @@ function MetricsBlock({ data }) {
   );
 }
 
+function QuickLinksBlock({ data }) {
+  const items = data.items || [];
+  if (items.length === 0) return null;
+  return (
+    <nav className="border-y border-black/5 bg-mist">
+      <div className="wrap flex flex-wrap justify-center gap-x-10 gap-y-3 py-5 text-sm">
+        {items.map((item, i) => (
+          <a key={i} href={item.href} className="font-medium text-ink hover:text-teal-600">
+            {item.label}
+          </a>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+function BadgesBlock({ data }) {
+  const items = data.items || [];
+  if (items.length === 0) return null;
+  return (
+    <section className="wrap py-14">
+      {data.heading && <h2 className="mb-8 font-syne text-2xl font-semibold text-ink">{data.heading}</h2>}
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((item, i) => (
+          <div key={i} className="flex gap-3">
+            <span className="mt-1 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-teal-500 text-navy-950">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            </span>
+            <div>
+              <p className="font-semibold text-ink">{item.title}</p>
+              {item.description && <p className="mt-1 text-sm text-slatey">{item.description}</p>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FeatureCardsBlock({ data }) {
+  const items = data.items || [];
+  if (items.length === 0) return null;
+  return (
+    <section className="wrap py-14">
+      {data.heading && <h2 className="mb-3 font-syne text-2xl font-semibold text-ink">{data.heading}</h2>}
+      {data.intro && <p className="mb-10 max-w-2xl text-slatey">{data.intro}</p>}
+      <div className="space-y-14">
+        {items.map((item, i) => {
+          const imageOnRight = i % 2 === 0;
+          return (
+            <div key={i} className="grid items-center gap-8 md:grid-cols-2">
+              {item.imageUrl && (
+                <div className={imageOnRight ? "md:order-2" : ""}>
+                  <img src={item.imageUrl} alt={item.title || ""} className="aspect-video w-full object-cover" />
+                </div>
+              )}
+              <div className={item.imageUrl && imageOnRight ? "md:order-1" : ""}>
+                <h3 className="font-syne text-xl font-semibold text-ink">{item.title}</h3>
+                {item.description && <p className="mt-3 text-slatey">{item.description}</p>}
+                {item.linkLabel && item.linkHref && (
+                  <a href={item.linkHref} className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-600 hover:text-teal-700">
+                    {item.linkLabel}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </a>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 const RENDERERS = {
   hero: HeroBlock,
   richtext: RichTextBlock,
@@ -137,6 +215,9 @@ const RENDERERS = {
   cta: CtaBlock,
   gallery: GalleryBlock,
   metrics: MetricsBlock,
+  quickLinks: QuickLinksBlock,
+  badges: BadgesBlock,
+  featureCards: FeatureCardsBlock,
 };
 
 export default function BlockRenderer({ block }) {

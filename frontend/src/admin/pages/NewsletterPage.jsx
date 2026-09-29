@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { adminApi } from "../lib/adminApi.js";
+import { useConfirmDialog } from "../hooks/useConfirmDialog.jsx";
 
 function CampaignForm({ onCreate, onCancel }) {
   const [subject, setSubject] = useState("");
@@ -46,8 +48,8 @@ export default function NewsletterPage() {
   const [subscribers, setSubscribers] = useState(null);
   const [campaigns, setCampaigns] = useState(null);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   function load() {
     adminApi.get("/api/newsletter/subscribers").then(setSubscribers).catch((err) => setError(err.message));
@@ -63,35 +65,44 @@ export default function NewsletterPage() {
       await adminApi.post("/api/newsletter/campaigns", payload);
       setShowForm(false);
       load();
+      toast.success("Draft saved.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
   async function handleSend(id) {
-    if (!confirm(`Send this campaign to ${activeSubscribers} subscriber(s)? This can't be undone.`)) return;
-    setError("");
+    const ok = await confirm({
+      title: "Send this campaign?",
+      message: `This sends to ${activeSubscribers} subscriber(s) and can't be undone.`,
+      confirmLabel: "Send",
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       await adminApi.post(`/api/newsletter/campaigns/${id}/send`, {});
-      setNotice("Sending in the background — refresh in a moment to see results.");
+      toast.success("Sending in the background — refresh in a moment to see results.");
       setTimeout(load, 3000);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
   async function handleDelete(id) {
-    if (!confirm("Delete this draft?")) return;
+    const ok = await confirm({ title: "Delete this draft?", confirmLabel: "Delete", destructive: true });
+    if (!ok) return;
     try {
       await adminApi.del(`/api/newsletter/campaigns/${id}`);
       load();
+      toast.success("Draft deleted.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
   return (
     <div>
+      {confirmDialog}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 font-syne text-2xl font-semibold text-ink">Newsletter</h1>
@@ -105,7 +116,6 @@ export default function NewsletterPage() {
       </div>
 
       {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-      {notice && <div className="mb-4 border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-700">{notice}</div>}
       {showForm && <CampaignForm onCreate={handleCreate} onCancel={() => setShowForm(false)} />}
 
       {!campaigns ? (

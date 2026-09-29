@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import { adminApi } from "../lib/adminApi.js";
 
 const CATEGORIES = ["Market News", "Company News", "Press"];
@@ -8,7 +9,6 @@ export default function NewsEditorPage() {
   const { id } = useParams();
   const [post, setPost] = useState(null);
   const [error, setError] = useState("");
-  const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -17,7 +17,6 @@ export default function NewsEditorPage() {
 
   async function handleSave() {
     setSaving(true);
-    setError("");
     try {
       const updated = await adminApi.put(`/api/news/${id}`, {
         slug: post.slug,
@@ -29,12 +28,11 @@ export default function NewsEditorPage() {
         status: post.status,
       });
       setPost(updated);
-      setStatus("Saved.");
+      toast.success("Saved.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setSaving(false);
-      setTimeout(() => setStatus(""), 2500);
     }
   }
 
@@ -121,9 +119,6 @@ export default function NewsEditorPage() {
             <option value="published">Published</option>
           </select>
         </div>
-
-        {status && <p className="text-sm text-teal-700">{status}</p>}
-        {error && <p className="text-sm text-red-600">{error}</p>}
 
         <div className="flex items-center gap-4">
           <button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-60">

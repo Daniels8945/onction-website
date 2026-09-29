@@ -47,8 +47,13 @@ def send_email(to_email: str, subject: str, html_body: str, text_body: str | Non
         msg.attach(MIMEText(text_body, "plain"))
     msg.attach(MIMEText(html_body, "html"))
 
-    with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=15) as server:
-        if settings.smtp_use_tls:
+    # Port 465 is implicit TLS (the connection is encrypted from the start —
+    # smtplib.SMTP_SSL); everything else (587, 25, ...) is plaintext upgraded
+    # via STARTTLS. Many hosting-provided mailboxes (cPanel, etc.) default to
+    # 465, so both need to work rather than assuming STARTTLS everywhere.
+    smtp_class = smtplib.SMTP_SSL if settings.smtp_port == 465 else smtplib.SMTP
+    with smtp_class(settings.smtp_host, settings.smtp_port, timeout=15) as server:
+        if settings.smtp_use_tls and settings.smtp_port != 465:
             server.starttls()
         if settings.smtp_user:
             server.login(settings.smtp_user, settings.smtp_password)

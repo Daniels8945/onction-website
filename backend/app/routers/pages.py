@@ -104,15 +104,17 @@ def replace_blocks(
     if page is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
 
-    for existing_block in list(page.blocks):
-        session.delete(existing_block)
+    # Clear (not manually session.delete()) so the relationship's own
+    # delete-orphan cascade removes the old rows — deleting them directly
+    # while they're still in page.blocks's collection conflicts with that
+    # cascade and raises "Instance has been deleted" on the next flush.
+    page.blocks.clear()
     session.flush()
 
     for item in blocks:
         session.add(Block(page_id=page_id, type=item.type, position=item.position, data=item.data))
 
     page.updated_at = datetime.utcnow()
-    session.add(page)
     session.commit()
     session.refresh(page)
     return page

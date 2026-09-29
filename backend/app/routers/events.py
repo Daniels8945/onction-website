@@ -3,8 +3,9 @@ import io
 from datetime import datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
-from sqlmodel import Session, func, select
+from sqlmodel import Session, delete, func, select
 
+from ..analytics_utils import get_session_attribution
 from ..config import get_settings
 from ..database import get_session
 from ..email import render_shell, try_send_email
@@ -70,7 +71,13 @@ def register_for_event(
     is_full = event.capacity is not None and registered_count >= event.capacity
     reg_status = "waitlisted" if is_full else "registered"
 
-    registration = Registration(event_id=event.id, status=reg_status, **payload.model_dump())
+    data = payload.model_dump(exclude={"session_id"})
+    registration = Registration(
+        event_id=event.id,
+        status=reg_status,
+        **data,
+        **get_session_attribution(session, payload.session_id),
+    )
     session.add(registration)
     session.commit()
     session.refresh(registration)
@@ -165,6 +172,9 @@ def delete_event(
     event = session.get(Event, event_id)
     if event is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+    # Registration has no cascade relationship back to Event, so its rows
+    # need clearing first or the delete below violates the FK constraint.
+    session.exec(delete(Registration).where(Registration.event_id == event_id))
     session.delete(event)
     session.commit()
 

@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { adminApi } from "../lib/adminApi.js";
+import { usePromptDialog } from "../hooks/usePromptDialog.jsx";
+import { useConfirmDialog } from "../hooks/useConfirmDialog.jsx";
 
 function slugify(title) {
   return title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -10,13 +13,19 @@ export default function EventsListPage() {
   const [events, setEvents] = useState(null);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { prompt, dialog: promptDialog } = usePromptDialog();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   useEffect(() => {
     adminApi.get("/api/events").then(setEvents).catch((err) => setError(err.message));
   }, []);
 
   async function handleCreate() {
-    const title = prompt('Event title (e.g. "WAPP Trading Forum 2026")');
+    const title = await prompt({
+      title: "New event",
+      label: "Event title",
+      placeholder: 'e.g. "WAPP Trading Forum 2026"',
+    });
     if (!title) return;
     try {
       const event = await adminApi.post("/api/events", {
@@ -27,22 +36,31 @@ export default function EventsListPage() {
       });
       navigate(`/admin/events/${event.id}`);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
   async function handleDelete(id) {
-    if (!confirm("Delete this event and all its registrations?")) return;
+    const ok = await confirm({
+      title: "Delete this event?",
+      message: "This deletes the event and all its registrations. This can't be undone.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       await adminApi.del(`/api/events/${id}`);
       setEvents((prev) => prev.filter((e) => e.id !== id));
+      toast.success("Event deleted.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
   return (
     <div>
+      {promptDialog}
+      {confirmDialog}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 font-syne text-2xl font-semibold text-ink">Events</h1>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
+import { getSessionId } from "../lib/session.js";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
@@ -18,7 +19,7 @@ function RegistrationForm({ slug, onRegistered }) {
       const res = await fetch(`${API_BASE}/api/events/public/${slug}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, session_id: getSessionId() || undefined }),
       });
       if (!res.ok) throw new Error("Registration failed — please try again.");
       const data = await res.json();

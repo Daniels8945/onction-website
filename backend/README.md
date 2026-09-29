@@ -40,7 +40,8 @@ dev-only JWT secret, object storage disabled until S3 vars are set).
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_USE_TLS` | Sends newsletters, event confirmations, and admin alerts. Provider-agnostic — works against a VPS mail server or any SMTP-compatible ESP (SES, SendGrid, Mailgun) unchanged |
 | `SMTP_FROM_EMAIL` / `SMTP_FROM_NAME` | The From: address/name on outgoing mail |
 | `ALERT_EMAIL` | Where new-enquiry / new-registration notifications go (defaults to `ADMIN_EMAIL`) |
-| `PUBLIC_SITE_URL` | Used to build links inside emails (unsubscribe, etc.) |
+| `PUBLIC_SITE_URL` | Used to build links inside main-site emails (unsubscribe, etc.) |
+| `VENDOR_PORTAL_URL` | Used to build links inside vendor-portal emails (password reset) — the vendor portal is served on its own subdomain (`vendors.<domain>`), so this is separate from `PUBLIC_SITE_URL` |
 
 ## Endpoints
 
@@ -81,6 +82,31 @@ dev-only JWT secret, object storage disabled until S3 vars are set).
 | GET/POST/PUT/DELETE | `/api/tasks[/{id}]` | ✅ | Dashboard — action-items/task board |
 
 ✅ = requires `Authorization: Bearer <token>` from `/api/auth/login`.
+
+### Vendor platform (`/api/vendor-platform/*`)
+
+The merged vendor registration/management platform — vendors, invoices,
+documents, services, notifications, audit log, and settings. Full interactive
+reference is at `/docs` (Swagger, tagged `vendor-platform`); the high points:
+
+| Area | Auth | Notes |
+|---|---|---|
+| `POST /api/vendor-platform/auth/register` | — | Public vendor self-registration |
+| `POST /api/vendor-platform/auth/login` | — | Vendor login by vendor code (+ optional password) |
+| `POST /api/vendor-platform/auth/forgot-password` / `reset-password` | — | Vendor password reset |
+| `POST /api/auth/forgot-password` / `reset-password` | — | Admin password reset (same idea, admin-scoped) |
+| `/api/vendor-platform/vendors[...]` | Admin (role-gated) | Vendor CRUD, status, notes |
+| `/api/vendor-platform/invoices[...]` | Admin or the owning vendor | Shared endpoints — vendors see only their own |
+| `/api/vendor-platform/documents[...]` | Admin or the owning vendor | Uploads go to the same S3-compatible bucket as media |
+| `/api/vendor-platform/services[...]` | Admin writes, anyone reads active ones | Catalogue for invoice line items |
+| `/api/vendor-platform/notifications[...]` | Admin or vendor | Scoped to the caller |
+| `/api/vendor-platform/audit` | Admin (clear: Super Admin only) | |
+| `/api/vendor-platform/settings` | GET public, PUT admin | Currency, prefixes, approval workflow toggles |
+
+Admin roles (`AdminUser.role`): **Super Admin**, **Admin**, **Viewer** — set
+when creating a team member, gates the vendor-platform write endpoints
+above (`security.require_role`). Existing modules (pages/news/events/etc.)
+are unaffected by roles.
 
 Data is stored in `onction.db` (SQLite) by default, created automatically on
 first run. Point `DATABASE_URL` at Postgres for production.

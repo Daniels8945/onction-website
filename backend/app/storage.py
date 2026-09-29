@@ -11,6 +11,10 @@ settings = get_settings()
 ALLOWED_CONTENT_TYPES = {
     "image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml",
     "video/mp4", "video/webm", "video/quicktime",
+    # Vendor-platform document uploads (certificates, tax IDs, invoices, etc.)
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 }
 MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB, generous enough for short video clips
 

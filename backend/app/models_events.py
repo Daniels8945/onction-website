@@ -29,6 +29,12 @@ class Registration(SQLModel, table=True):
     status: str = Field(default="registered")  # "registered" | "waitlisted" | "cancelled"
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+    # Attribution — same pattern as Enquiry, see analytics_utils.get_session_attribution.
+    utm_source: Optional[str] = Field(default=None, max_length=200)
+    utm_medium: Optional[str] = Field(default=None, max_length=200)
+    utm_campaign: Optional[str] = Field(default=None, max_length=200)
+    referrer_category: Optional[str] = Field(default=None, max_length=20)
+
 
 # --- API payload/response shapes -------------------------------------------
 
@@ -78,6 +84,7 @@ class RegistrationCreate(SQLModel):
     full_name: str = Field(min_length=1, max_length=160)
     email: str = Field(min_length=3, max_length=200)
     company: Optional[str] = Field(default=None, max_length=160)
+    session_id: Optional[str] = Field(default=None, max_length=100)
 
 
 class RegistrationRead(SQLModel):
@@ -86,4 +93,8 @@ class RegistrationRead(SQLModel):
     email: str
     company: Optional[str]
     status: str
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
+    referrer_category: Optional[str] = None
     created_at: datetime

@@ -72,6 +72,27 @@ export const BLOCK_TYPES = {
     defaultData: { items: [] }, // [{value, label}] — edited via a dedicated list editor
     fields: [],
   },
+  quickLinks: {
+    label: "Quick links bar",
+    defaultData: { items: [] }, // [{label, href}] — edited via a dedicated list editor
+    fields: [],
+  },
+  badges: {
+    label: "Achievement badges",
+    defaultData: { heading: "", items: [] }, // items: [{title, description}] — edited via a dedicated list editor
+    fields: [{ key: "heading", label: "Heading (optional)", type: "text" }],
+  },
+  featureCards: {
+    // Alternating image + heading + description cards — covers both
+    // "initiative" style sections and "impact/stat" style sections, since
+    // structurally they're the same pattern with different copy.
+    label: "Feature cards (alternating)",
+    defaultData: { heading: "", intro: "", items: [] }, // items: [{title, description, imageUrl, linkLabel, linkHref}]
+    fields: [
+      { key: "heading", label: "Heading (optional)", type: "text" },
+      { key: "intro", label: "Intro text (optional)", type: "textarea" },
+    ],
+  },
 };
 
 export const BLOCK_TYPE_KEYS = Object.keys(BLOCK_TYPES);

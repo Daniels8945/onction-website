@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import { adminApi } from "../lib/adminApi.js";
+import { useConfirmDialog } from "../hooks/useConfirmDialog.jsx";
 
 export default function MediaPage() {
   const [assets, setAssets] = useState(null);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   function loadAssets() {
     adminApi
@@ -19,7 +22,6 @@ export default function MediaPage() {
   async function handleFileChange(e) {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-    setError("");
     setUploading(true);
     try {
       for (const file of files) {
@@ -28,8 +30,9 @@ export default function MediaPage() {
         await adminApi.upload("/api/media", formData);
       }
       loadAssets();
+      toast.success(files.length === 1 ? "File uploaded." : `${files.length} files uploaded.`);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -37,21 +40,25 @@ export default function MediaPage() {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Delete this file? This can't be undone.")) return;
+    const ok = await confirm({ title: "Delete this file?", message: "This can't be undone.", confirmLabel: "Delete", destructive: true });
+    if (!ok) return;
     try {
       await adminApi.del(`/api/media/${id}`);
       setAssets((prev) => prev.filter((a) => a.id !== id));
+      toast.success("File deleted.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
   function copyUrl(url) {
     navigator.clipboard?.writeText(url);
+    toast.success("URL copied to clipboard.");
   }
 
   return (
     <div>
+      {confirmDialog}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 font-syne text-2xl font-semibold text-ink">Media library</h1>

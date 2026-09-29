@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import { adminApi, API_BASE, getToken } from "../lib/adminApi.js";
+import { useConfirmDialog } from "../hooks/useConfirmDialog.jsx";
 
 const CATEGORIES = ["Onction Event", "Industry Event"];
 
@@ -16,8 +18,8 @@ export default function EventEditorPage() {
   const [event, setEvent] = useState(null);
   const [registrations, setRegistrations] = useState(null);
   const [error, setError] = useState("");
-  const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   function loadRegistrations() {
     adminApi.get(`/api/events/${id}/registrations`).then(setRegistrations).catch(() => {});
@@ -30,7 +32,6 @@ export default function EventEditorPage() {
 
   async function handleSave() {
     setSaving(true);
-    setError("");
     try {
       const updated = await adminApi.put(`/api/events/${id}`, {
         slug: event.slug,
@@ -45,23 +46,29 @@ export default function EventEditorPage() {
         status: event.status,
       });
       setEvent(updated);
-      setStatus("Saved.");
+      toast.success("Saved.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setSaving(false);
-      setTimeout(() => setStatus(""), 2500);
     }
   }
 
   async function handleCancelRegistration(regId) {
-    if (!confirm("Cancel this registration? If the event is full, the next waitlisted person will be promoted automatically.")) return;
+    const ok = await confirm({
+      title: "Cancel this registration?",
+      message: "If the event is full, the next waitlisted person will be promoted automatically.",
+      confirmLabel: "Cancel registration",
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       await adminApi.del(`/api/events/${id}/registrations/${regId}`);
       loadRegistrations();
       adminApi.get(`/api/events/${id}`).then(setEvent);
+      toast.success("Registration cancelled.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
@@ -84,6 +91,7 @@ export default function EventEditorPage() {
 
   return (
     <div>
+      {confirmDialog}
       <Link to="/admin/events" className="mb-4 inline-block text-xs font-medium text-slatey hover:text-ink">
         ← All events
       </Link>
@@ -191,9 +199,6 @@ export default function EventEditorPage() {
               </select>
             </div>
           </div>
-
-          {status && <p className="text-sm text-teal-700">{status}</p>}
-          {error && <p className="text-sm text-red-600">{error}</p>}
 
           <div className="flex items-center gap-4">
             <button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-60">

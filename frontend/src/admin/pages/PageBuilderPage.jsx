@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import { adminApi } from "../lib/adminApi.js";
 import { BLOCK_TYPES, BLOCK_TYPE_KEYS } from "../../blocks/blockTypes.js";
 
@@ -117,9 +118,186 @@ function MetricsEditor({ data, onChange }) {
   );
 }
 
+function QuickLinksEditor({ data, onChange }) {
+  const items = data.items || [];
+  function update(i, patch) {
+    onChange({ items: items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)) });
+  }
+  function remove(i) {
+    onChange({ items: items.filter((_, idx) => idx !== i) });
+  }
+  return (
+    <div className="space-y-3">
+      {items.map((item, i) => (
+        <div key={i} className="flex gap-2">
+          <input
+            placeholder="Label"
+            value={item.label || ""}
+            onChange={(e) => update(i, { label: e.target.value })}
+            className="flex-1 border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+          />
+          <input
+            placeholder="Link (e.g. #section or /page)"
+            value={item.href || ""}
+            onChange={(e) => update(i, { href: e.target.value })}
+            className="flex-1 border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+          />
+          <button onClick={() => remove(i)} className="px-2 text-xs text-red-600">
+            Remove
+          </button>
+        </div>
+      ))}
+      <button
+        onClick={() => onChange({ items: [...items, { label: "", href: "" }] })}
+        className="text-xs font-medium text-teal-600 hover:text-teal-700"
+      >
+        + Add link
+      </button>
+    </div>
+  );
+}
+
+function BadgesEditor({ data, onChange }) {
+  const items = data.items || [];
+  function update(i, patch) {
+    onChange({ ...data, items: items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)) });
+  }
+  function remove(i) {
+    onChange({ ...data, items: items.filter((_, idx) => idx !== i) });
+  }
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="mb-1 block text-xs font-medium text-slatey">Heading (optional)</label>
+        <input
+          value={data.heading || ""}
+          onChange={(e) => onChange({ ...data, heading: e.target.value })}
+          className="w-full border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+        />
+      </div>
+      <div className="space-y-3">
+        {items.map((item, i) => (
+          <div key={i} className="flex gap-2 border border-black/10 p-3">
+            <div className="flex-1 space-y-2">
+              <input
+                placeholder="Title"
+                value={item.title || ""}
+                onChange={(e) => update(i, { title: e.target.value })}
+                className="w-full border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+              />
+              <input
+                placeholder="Description (optional)"
+                value={item.description || ""}
+                onChange={(e) => update(i, { description: e.target.value })}
+                className="w-full border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+              />
+            </div>
+            <button onClick={() => remove(i)} className="self-start px-2 text-xs text-red-600">
+              Remove
+            </button>
+          </div>
+        ))}
+        <button
+          onClick={() => onChange({ ...data, items: [...items, { title: "", description: "" }] })}
+          className="text-xs font-medium text-teal-600 hover:text-teal-700"
+        >
+          + Add badge
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FeatureCardsEditor({ data, onChange }) {
+  const items = data.items || [];
+  function update(i, patch) {
+    onChange({ ...data, items: items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)) });
+  }
+  function remove(i) {
+    onChange({ ...data, items: items.filter((_, idx) => idx !== i) });
+  }
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="mb-1 block text-xs font-medium text-slatey">Heading (optional)</label>
+        <input
+          value={data.heading || ""}
+          onChange={(e) => onChange({ ...data, heading: e.target.value })}
+          className="w-full border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+        />
+      </div>
+      <div>
+        <label className="mb-1 block text-xs font-medium text-slatey">Intro text (optional)</label>
+        <textarea
+          rows={2}
+          value={data.intro || ""}
+          onChange={(e) => onChange({ ...data, intro: e.target.value })}
+          className="w-full border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+        />
+      </div>
+      <div className="space-y-4">
+        {items.map((item, i) => (
+          <div key={i} className="space-y-2 border border-black/10 p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slatey">Card {i + 1}</span>
+              <button onClick={() => remove(i)} className="text-xs text-red-600">
+                Remove
+              </button>
+            </div>
+            <input
+              placeholder="Title"
+              value={item.title || ""}
+              onChange={(e) => update(i, { title: e.target.value })}
+              className="w-full border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+            />
+            <textarea
+              placeholder="Description"
+              rows={2}
+              value={item.description || ""}
+              onChange={(e) => update(i, { description: e.target.value })}
+              className="w-full border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+            />
+            <input
+              placeholder="Image URL (paste from Media library)"
+              value={item.imageUrl || ""}
+              onChange={(e) => update(i, { imageUrl: e.target.value })}
+              className="w-full border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+            />
+            <div className="flex gap-2">
+              <input
+                placeholder="Link label (optional, e.g. Learn more)"
+                value={item.linkLabel || ""}
+                onChange={(e) => update(i, { linkLabel: e.target.value })}
+                className="flex-1 border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+              />
+              <input
+                placeholder="Link URL"
+                value={item.linkHref || ""}
+                onChange={(e) => update(i, { linkHref: e.target.value })}
+                className="flex-1 border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500"
+              />
+            </div>
+          </div>
+        ))}
+        <button
+          onClick={() =>
+            onChange({ ...data, items: [...items, { title: "", description: "", imageUrl: "", linkLabel: "", linkHref: "" }] })
+          }
+          className="text-xs font-medium text-teal-600 hover:text-teal-700"
+        >
+          + Add card
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function BlockEditor({ type, data, onChange }) {
   if (type === "gallery") return <GalleryEditor data={data} onChange={onChange} />;
   if (type === "metrics") return <MetricsEditor data={data} onChange={onChange} />;
+  if (type === "quickLinks") return <QuickLinksEditor data={data} onChange={onChange} />;
+  if (type === "badges") return <BadgesEditor data={data} onChange={onChange} />;
+  if (type === "featureCards") return <FeatureCardsEditor data={data} onChange={onChange} />;
   return <FieldsEditor type={type} data={data} onChange={onChange} />;
 }
 
@@ -153,7 +331,6 @@ export default function PageBuilderPage() {
   const [page, setPage] = useState(null);
   const [blocks, setBlocks] = useState([]);
   const [error, setError] = useState("");
-  const [status, setStatus] = useState(""); // transient save confirmation
   const [savingMeta, setSavingMeta] = useState(false);
   const [savingBlocks, setSavingBlocks] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -170,7 +347,6 @@ export default function PageBuilderPage() {
 
   async function handleSaveMeta() {
     setSavingMeta(true);
-    setError("");
     try {
       const updated = await adminApi.put(`/api/pages/${id}`, {
         slug: page.slug,
@@ -179,28 +355,25 @@ export default function PageBuilderPage() {
         status: page.status,
       });
       setPage((prev) => ({ ...prev, ...updated }));
-      setStatus("Page details saved.");
+      toast.success("Page details saved.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setSavingMeta(false);
-      setTimeout(() => setStatus(""), 2500);
     }
   }
 
   async function handleSaveBlocks() {
     setSavingBlocks(true);
-    setError("");
     try {
       const payload = blocks.map((b, i) => ({ type: b.type, position: i, data: b.data }));
       const updated = await adminApi.put(`/api/pages/${id}/blocks`, payload);
       setBlocks(updated.blocks.map((b) => ({ ...b, clientId: newClientId() })));
-      setStatus("Content saved.");
+      toast.success("Content saved.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setSavingBlocks(false);
-      setTimeout(() => setStatus(""), 2500);
     }
   }
 
@@ -296,9 +469,6 @@ export default function PageBuilderPage() {
           </div>
         </section>
       </div>
-
-      {status && <div className="mb-4 border border-teal-200 bg-teal-50 px-4 py-2 text-sm text-teal-700">{status}</div>}
-      {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
       <div className="mb-3 flex items-center justify-between">
         <p className="eyebrow">Content blocks</p>

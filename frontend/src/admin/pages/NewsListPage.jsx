@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { adminApi } from "../lib/adminApi.js";
+import { usePromptDialog } from "../hooks/usePromptDialog.jsx";
+import { useConfirmDialog } from "../hooks/useConfirmDialog.jsx";
 
 function slugify(title) {
   return title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -10,34 +13,44 @@ export default function NewsListPage() {
   const [posts, setPosts] = useState(null);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { prompt, dialog: promptDialog } = usePromptDialog();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   useEffect(() => {
     adminApi.get("/api/news").then(setPosts).catch((err) => setError(err.message));
   }, []);
 
   async function handleCreate() {
-    const title = prompt('Post title (e.g. "WAPP Market Update — August 2026")');
+    const title = await prompt({
+      title: "New post",
+      label: "Post title",
+      placeholder: 'e.g. "WAPP Market Update — August 2026"',
+    });
     if (!title) return;
     try {
       const post = await adminApi.post("/api/news", { slug: slugify(title), title, status: "draft" });
       navigate(`/admin/news/${post.id}`);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
   async function handleDelete(id) {
-    if (!confirm("Delete this post?")) return;
+    const ok = await confirm({ title: "Delete this post?", confirmLabel: "Delete", destructive: true });
+    if (!ok) return;
     try {
       await adminApi.del(`/api/news/${id}`);
       setPosts((prev) => prev.filter((p) => p.id !== id));
+      toast.success("Post deleted.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }
 
   return (
     <div>
+      {promptDialog}
+      {confirmDialog}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 font-syne text-2xl font-semibold text-ink">News</h1>

@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import App from "./App.jsx";
 import { usePageviewTracking } from "./hooks/usePageviewTracking.js";
 import { AuthProvider } from "./admin/AuthContext.jsx";
+import { VendorAuthProvider } from "./vendor-portal/VendorAuthContext.jsx";
 import "./index.css";
 
 // Code-split everything admin/dashboard-related (and the dynamic page
@@ -31,8 +32,34 @@ const NewsEditorPage = lazy(() => import("./admin/pages/NewsEditorPage.jsx"));
 const EventsListPage = lazy(() => import("./admin/pages/EventsListPage.jsx"));
 const EventEditorPage = lazy(() => import("./admin/pages/EventEditorPage.jsx"));
 const NewsletterPage = lazy(() => import("./admin/pages/NewsletterPage.jsx"));
+const VendorsListPage = lazy(() => import("./admin/pages/vendor-platform/VendorsListPage.jsx"));
+const AddVendorPage = lazy(() => import("./admin/pages/vendor-platform/AddVendorPage.jsx"));
+const VendorProfilePage = lazy(() => import("./admin/pages/vendor-platform/VendorProfilePage.jsx"));
+const InvoicesPage = lazy(() => import("./admin/pages/vendor-platform/InvoicesPage.jsx"));
+const VendorDocumentsPage = lazy(() => import("./admin/pages/vendor-platform/VendorDocumentsPage.jsx"));
+const ServicesPage = lazy(() => import("./admin/pages/vendor-platform/ServicesPage.jsx"));
+const AuditLogPage = lazy(() => import("./admin/pages/vendor-platform/AuditLogPage.jsx"));
+const VendorSettingsPage = lazy(() => import("./admin/pages/vendor-platform/VendorSettingsPage.jsx"));
 
-function AppRoutes() {
+const VendorProtectedRoute = lazy(() => import("./vendor-portal/VendorProtectedRoute.jsx"));
+const VendorLayout = lazy(() => import("./vendor-portal/VendorLayout.jsx"));
+const VendorLoginPage = lazy(() => import("./vendor-portal/VendorLoginPage.jsx"));
+const VendorRegisterPage = lazy(() => import("./vendor-portal/VendorRegisterPage.jsx"));
+const VendorForgotPasswordPage = lazy(() => import("./vendor-portal/VendorForgotPasswordPage.jsx"));
+const VendorResetPasswordPage = lazy(() => import("./vendor-portal/VendorResetPasswordPage.jsx"));
+const VendorDashboardPage = lazy(() => import("./vendor-portal/pages/VendorDashboardPage.jsx"));
+const VendorInvoicesPage = lazy(() => import("./vendor-portal/pages/VendorInvoicesPage.jsx"));
+const VendorPortalDocumentsPage = lazy(() => import("./vendor-portal/pages/VendorDocumentsPage.jsx"));
+const VendorPortalProfilePage = lazy(() => import("./vendor-portal/pages/VendorProfilePage.jsx"));
+const VendorNotificationsPage = lazy(() => import("./vendor-portal/pages/VendorNotificationsPage.jsx"));
+
+// The vendor portal is served from its own subdomain (vendors.onctionenergy.com)
+// rather than a /vendor path on the main site — Caddy routes both hostnames to
+// this same frontend container/build, so we branch the route tree here instead
+// of shipping (and deploying) a second app.
+const IS_VENDOR_SUBDOMAIN = window.location.hostname.startsWith("vendors.");
+
+function MainSiteRoutes() {
   usePageviewTracking();
 
   return (
@@ -66,6 +93,14 @@ function AppRoutes() {
           <Route path="events/:id" element={<EventEditorPage />} />
           <Route path="newsletter" element={<NewsletterPage />} />
           <Route path="team" element={<TeamPage />} />
+          <Route path="vendors" element={<VendorsListPage />} />
+          <Route path="vendors/add" element={<AddVendorPage />} />
+          <Route path="vendors/:id" element={<VendorProfilePage />} />
+          <Route path="invoices" element={<InvoicesPage />} />
+          <Route path="documents" element={<VendorDocumentsPage />} />
+          <Route path="services" element={<ServicesPage />} />
+          <Route path="audit-log" element={<AuditLogPage />} />
+          <Route path="vendor-settings" element={<VendorSettingsPage />} />
         </Route>
 
         {/* Catch-all: any other path is a dashboard-built page, e.g. /about */}
@@ -75,12 +110,45 @@ function AppRoutes() {
   );
 }
 
+function VendorPortalRoutes() {
+  return (
+    <Suspense fallback={null}>
+      <Routes>
+        <Route path="/register" element={<VendorRegisterPage />} />
+        <Route path="/login" element={<VendorLoginPage />} />
+        <Route path="/forgot-password" element={<VendorForgotPasswordPage />} />
+        <Route path="/reset-password" element={<VendorResetPasswordPage />} />
+        <Route
+          path="/"
+          element={
+            <VendorProtectedRoute>
+              <VendorLayout />
+            </VendorProtectedRoute>
+          }
+        >
+          <Route index element={<VendorDashboardPage />} />
+          <Route path="invoices" element={<VendorInvoicesPage />} />
+          <Route path="documents" element={<VendorPortalDocumentsPage />} />
+          <Route path="profile" element={<VendorPortalProfilePage />} />
+          <Route path="notifications" element={<VendorNotificationsPage />} />
+        </Route>
+      </Routes>
+    </Suspense>
+  );
+}
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      {IS_VENDOR_SUBDOMAIN ? (
+        <VendorAuthProvider>
+          <VendorPortalRoutes />
+        </VendorAuthProvider>
+      ) : (
+        <AuthProvider>
+          <MainSiteRoutes />
+        </AuthProvider>
+      )}
     </BrowserRouter>
   </React.StrictMode>
 );

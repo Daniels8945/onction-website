@@ -25,7 +25,12 @@ def create_admin(
     existing = session.exec(select(AdminUser).where(AdminUser.email == payload.email)).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="An account with this email already exists")
-    admin = AdminUser(email=payload.email, full_name=payload.full_name, password_hash=hash_password(payload.password))
+    admin = AdminUser(
+        email=payload.email,
+        full_name=payload.full_name,
+        password_hash=hash_password(payload.password),
+        role=payload.role,
+    )
     session.add(admin)
     session.commit()
     session.refresh(admin)
