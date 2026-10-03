@@ -143,10 +143,10 @@ export default function HeroPanel() {
             Dive into the Onction Energy capability deck
           </p>
           <a
-            href="#"
-            className="inline-flex shrink-0 items-center gap-2 rounded-none border border-[#f8f5ec] px-5 py-2.5 text-xl font-medium text-white/85 transition hover:border-teal-400 hover:text-teal-400"
+            href="/solutions"
+            className="group inline-flex shrink-0 items-center gap-2 rounded-none border border-[#f8f5ec] px-5 py-2.5 text-xl font-medium text-white/85 transition hover:border-teal-400 hover:text-teal-400"
           >
-            READ MORE <Arrow width={15} height={15} />
+            READ MORE <Arrow width={15} height={15} className="nudge" />
           </a>
         </div>
       </div>

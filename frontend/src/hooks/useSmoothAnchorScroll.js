@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { markAutoScroll } from "../motion/tokens.js";
 
 // Mobile Safari (and several Android webviews) have long ignored CSS
 // `scroll-behavior: smooth` for in-page "#id" anchor jumps — a known WebKit
@@ -20,6 +21,7 @@ export function useSmoothAnchorScroll() {
       if (!target) return;
 
       e.preventDefault();
+      markAutoScroll();
       target.scrollIntoView({ behavior: "smooth", block: "start" });
       history.pushState(null, "", `#${id}`);
     }

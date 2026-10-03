@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 
 from ..config import get_settings
 from ..database import engine, get_session
-from ..email import render_shell, try_send_email
+from ..email import button, render_shell, try_send_email
 from ..models_admin import AdminUser
 from ..models_newsletter import Campaign, CampaignCreate, CampaignRead, Subscriber, SubscribeRequest, SubscriberRead
 from ..security import get_current_admin
@@ -14,8 +14,38 @@ router = APIRouter(prefix="/api/newsletter", tags=["newsletter"])
 settings = get_settings()
 
 
+def _unsubscribe_url(sub: Subscriber) -> str:
+    return f"{settings.public_site_url.rstrip('/')}/unsubscribe?token={sub.unsubscribe_token}"
+
+
+def _send_welcome(background_tasks: BackgroundTasks, sub: Subscriber) -> None:
+    site = settings.public_site_url.rstrip("/")
+    background_tasks.add_task(
+        try_send_email,
+        sub.email,
+        "Welcome to Onction Energy market news",
+        render_shell(
+            '<h1 style="margin:0 0 16px;font-size:20px;">You\'re subscribed</h1>'
+            "<p>Thanks for signing up. You'll receive trading updates, market news and invitations to Onction events — "
+            "no spam, and you can unsubscribe at any time.</p>"
+            + button("Read the latest news", f"{site}/news"),
+            unsubscribe_url=_unsubscribe_url(sub),
+            preheader="You're on the list for Onction Energy market news.",
+        ),
+    )
+    background_tasks.add_task(
+        try_send_email,
+        settings.resolved_alert_email,
+        f"New newsletter subscriber: {sub.email}",
+        render_shell(f"<p><strong>{sub.email}</strong> just subscribed to the newsletter.</p>" + button("View subscribers", f"{site}/admin/newsletter")),
+    )
+
+
 @router.post("/subscribe", response_model=SubscriberRead, status_code=201)
-def subscribe(payload: SubscribeRequest, session: Session = Depends(get_session)):
+def subscribe(payload: SubscribeRequest, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):
+    """Public. Idempotent: an existing subscriber isn't emailed again, but a
+    previously unsubscribed address that signs up again is re-activated and
+    welcomed back."""
     existing = session.exec(select(Subscriber).where(Subscriber.email == payload.email)).first()
     if existing:
         if existing.status != "subscribed":
@@ -23,11 +53,13 @@ def subscribe(payload: SubscribeRequest, session: Session = Depends(get_session)
             session.add(existing)
             session.commit()
             session.refresh(existing)
+            _send_welcome(background_tasks, existing)
         return existing
     sub = Subscriber(email=payload.email, name=payload.name)
     session.add(sub)
     session.commit()
     session.refresh(sub)
+    _send_welcome(background_tasks, sub)
     return sub
 
 
@@ -119,8 +151,7 @@ def _send_campaign(campaign_id: int) -> None:
         sent, failed = 0, 0
         body_html = "".join(f"<p>{line}</p>" for line in campaign.body.split("\n") if line.strip())
         for sub in subscribers:
-            unsubscribe_url = f"{settings.public_site_url}/unsubscribe?token={sub.unsubscribe_token}"
-            html = render_shell(f"<h1 style='font-size:20px;'>{campaign.subject}</h1>{body_html}", unsubscribe_url)
+            html = render_shell(f"<h1 style='margin:0 0 16px;font-size:20px;'>{campaign.subject}</h1>{body_html}", _unsubscribe_url(sub))
             ok = try_send_email(sub.email, campaign.subject, html)
             sent += 1 if ok else 0
             failed += 0 if ok else 1

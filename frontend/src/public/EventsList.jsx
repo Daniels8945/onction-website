@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Header from "../components/Header.jsx";
-import Footer from "../components/Footer.jsx";
+import InnerHero from "../components/page/InnerHero.jsx";
+import Reveal from "../components/Reveal.jsx";
+import { usePageMeta } from "../hooks/usePageMeta.js";
+import handshakeImg from "../../assets/cytonn-photography-vWchRczcQwM-unsplash.jpg";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 export default function EventsList() {
   const [events, setEvents] = useState(null);
+  usePageMeta("Events", "Upcoming Onction Energy events.");
 
   useEffect(() => {
     fetch(`${API_BASE}/api/events/public`)
@@ -17,19 +20,23 @@ export default function EventsList() {
 
   return (
     <>
-      <Header />
-      <main className="wrap py-20">
-        <p className="eyebrow mb-2">What's on</p>
-        <h1 className="mb-10 font-syne text-4xl font-semibold text-ink">Events</h1>
+      <main>
+      <InnerHero crumb="Events" title="Where to meet the desk" accent="the desk" intro="Briefings, forums and industry events hosted or attended by Onction Energy." image={handshakeImg} compact />
+      <section className="wrap py-16 sm:py-20">
 
         {!events && <p className="text-sm text-slatey">Loading…</p>}
-        {events && events.length === 0 && <p className="text-sm text-slatey">No upcoming events — check back soon.</p>}
+        {events && events.length === 0 && (
+          <p className="text-slatey">
+            No upcoming events — check back soon, or <Link to="/contact" className="font-medium text-teal-700 underline underline-offset-4">talk to the desk</Link> directly.
+          </p>
+        )}
 
         <div className="space-y-4">
-          {events?.map((ev) => {
+          {events?.map((ev, i) => {
             const full = ev.capacity != null && ev.registered_count >= ev.capacity;
             return (
-              <Link key={ev.id} to={`/events/${ev.slug}`} className="card flex flex-col justify-between gap-3 md:flex-row md:items-center">
+              <Reveal key={ev.id} delay={i * 60}>
+              <Link to={`/events/${ev.slug}`} className="card flex flex-col justify-between gap-3 md:flex-row md:items-center">
                 <div>
                   <p className="eyebrow mb-1">{ev.category}</p>
                   <h2 className="font-syne text-xl font-semibold text-ink">{ev.title}</h2>
@@ -41,11 +48,12 @@ export default function EventsList() {
                   {full ? "Waitlist open" : "Registration open"}
                 </span>
               </Link>
+              </Reveal>
             );
           })}
         </div>
+      </section>
       </main>
-      <Footer />
     </>
   );
 }

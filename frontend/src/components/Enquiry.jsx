@@ -13,8 +13,10 @@ const EMPTY = {
   message: "",
 };
 
-export default function Enquiry() {
-  const [form, setForm] = useState(EMPTY);
+// `topic` (optional) pre-fills the message when a visitor arrives from a
+// "Discuss with the desk" link elsewhere on the site.
+export default function Enquiry({ topic } = {}) {
+  const [form, setForm] = useState(() => (topic ? { ...EMPTY, message: `I'd like to discuss ${topic}.` } : EMPTY));
   const [status, setStatus] = useState("idle"); // idle | loading | success | error
   const [error, setError] = useState("");
 
@@ -117,7 +119,7 @@ export default function Enquiry() {
                     Your details have been captured
                   </h3>
                   <p className="mt-2 text-slatey">
-                    Thanks — our trading desk will be in touch shortly.
+                    Thanks — our trading desk will be in touch shortly. We've emailed you a copy of your message.
                   </p>
                   <button
                     onClick={() => setStatus("idle")}

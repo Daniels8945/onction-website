@@ -2,10 +2,12 @@
 // endpoint. Uses sendBeacon where available so it survives the page
 // navigating away immediately after (SPA route changes).
 import { getSessionId, getUtmParams } from "./session.js";
+import { analyticsAllowed } from "./consent.js";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 export function trackPageview(path) {
+  if (!analyticsAllowed()) return; // nothing is sent until the visitor accepts analytics
   const payload = JSON.stringify({
     path,
     referrer: document.referrer || undefined,

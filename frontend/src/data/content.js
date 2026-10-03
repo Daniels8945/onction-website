@@ -63,12 +63,12 @@ export const heroSlides = [
 ];
 
 export const quickLinks = [
-  { label: "Our offerings", href: "#solutions" },
-  { label: "Our presence", href: "#about" },
-  { label: "Resource centre", href: "#why" },
-  { label: "Our leadership", href: "#about" },
-  { label: "GR0W with Onction", href: "#grow" },
-  { label: "Enquire now", href: "#enquire" },
+  { label: "Our offerings", href: "/solutions" },
+  { label: "Our presence", href: "/about#presence" },
+  { label: "Resource centre", href: "/news" },
+  { label: "Our leadership", href: "/about" },
+  { label: "GR0W with Onction", href: "/sustainability" },
+  { label: "Enquire now", href: "/contact" },
 ];
 
 export const badges = [

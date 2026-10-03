@@ -31,10 +31,13 @@ export function usePromptDialog() {
   const dialog = config ? (
     <InputDialog
       title={config.title}
+      message={config.message}
       label={config.label}
       placeholder={config.placeholder}
       defaultValue={config.defaultValue}
       confirmLabel={config.confirmLabel}
+      destructive={config.destructive}
+      multiline={config.multiline}
       onConfirm={handleConfirm}
       onCancel={handleCancel}
     />

@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import Header from "../components/Header.jsx";
-import Footer from "../components/Footer.jsx";
 import { getSessionId } from "../lib/session.js";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
@@ -83,12 +81,10 @@ export default function EventDetail() {
   if (notFound) {
     return (
       <>
-        <Header />
-        <main className="wrap flex min-h-[50vh] flex-col items-center justify-center text-center">
+        <main className="wrap flex min-h-[70vh] flex-col items-center justify-center pt-28 text-center">
           <p className="eyebrow mb-2">404</p>
           <h1 className="font-syne text-2xl font-semibold text-ink">Event not found</h1>
         </main>
-        <Footer />
       </>
     );
   }
@@ -99,8 +95,7 @@ export default function EventDetail() {
 
   return (
     <>
-      <Header />
-      <main className="wrap max-w-3xl py-20">
+      <main className="wrap max-w-3xl pb-20 pt-[calc(clamp(64px,7.5vw,91px)+3rem)]">
         <p className="eyebrow mb-2">{event.category}</p>
         <h1 className="font-syne text-3xl font-semibold text-ink md:text-4xl">{event.title}</h1>
         <p className="mt-3 text-sm text-slatey">
@@ -129,7 +124,6 @@ export default function EventDetail() {
           )}
         </div>
       </main>
-      <Footer />
     </>
   );
 }

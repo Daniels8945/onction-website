@@ -1,6 +1,7 @@
 import { metrics } from "../data/content.js";
 import SectionHeader from "./SectionHeader.jsx";
 import Reveal from "./Reveal.jsx";
+import CountUp from "../motion/CountUp.jsx";
 
 export default function Metrics() {
   return (
@@ -15,7 +16,8 @@ export default function Metrics() {
             <Reveal key={m.label} delay={idx * 80}>
               <div className="border-l-2 border-teal-500 pl-5">
                 <div className="font-outfit text-4xl font-medium text-navy-900 sm:text-5xl">
-                  {m.value}
+                  {/* years count up from the decade before; everything else from 0 */}
+                  <CountUp value={m.value} from={Number(m.value) >= 1900 ? Number(m.value) - 10 : 0} duration={1600} />
                   {m.unit && <span className="text-teal-500"> {m.unit}</span>}
                 </div>
                 <p className="mt-2 font-syne text-md leading-snug text-[#202020]">{m.label}</p>

@@ -174,9 +174,369 @@
     @apply inline-flex items-center justify-center gap-2 rounded-none border border-white/25 px-6 py-3 text-sm font-semibold text-white transition hover:border-teal-400 hover:text-teal-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-400;
   }
   .card {
-    @apply rounded-none border border-black/5 bg-white p-6 shadow-[0_1px_2px_rgba(10,31,60,0.04)] transition hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(10,31,60,0.10)];
+    @apply rounded-xl border border-black/[0.07] bg-white p-6 shadow-[0_1px_2px_rgba(10,31,60,0.04)];
   }
 }
+
+/* =====================================================
+   Motion system (see src/motion/tokens.js)
+   Reveal classes are toggled by .is-in from IntersectionObserver hooks.
+   ===================================================== */
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.rv {
+  transition-property: opacity, transform;
+  transition-duration: 900ms;
+  transition-timing-function: var(--ease-out);
+  transition-delay: var(--d, 0ms);
+}
+.rv-up { opacity: 0; transform: translate3d(0, 28px, 0); }
+.rv-fade { opacity: 0; }
+.rv-left { opacity: 0; transform: translate3d(-36px, 0, 0); }
+.rv-right { opacity: 0; transform: translate3d(36px, 0, 0); }
+.rv-scale { opacity: 0; transform: scale(0.96); }
+.rv.is-in { opacity: 1; transform: none; }
+
+/* Word-mask headline reveal (SplitText) */
+.sw {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+.sw > span {
+  display: inline-block;
+  transform: translate3d(0, 110%, 0);
+  transition: transform 1000ms var(--ease-out);
+  transition-delay: var(--d, 0ms);
+}
+.is-in .sw > span { transform: none; }
+
+/* Clip-path image reveal (ImageReveal) */
+.ir { clip-path: inset(100% 0 0 0); transition: clip-path 1200ms var(--ease-inout) var(--d, 0ms); }
+.ir-left { clip-path: inset(0 100% 0 0); }
+.ir-right { clip-path: inset(0 0 0 100%); }
+.ir img { transform: scale(1.18); transition: transform 1700ms var(--ease-out) var(--d, 0ms); }
+.ir.is-in { clip-path: inset(0 0 0 0); }
+.ir.is-in img { transform: scale(1); }
+
+/* SVG line drawing: give the shape pathLength="1" and class "dr" */
+.dr {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1800ms var(--ease-inout) var(--d, 0ms);
+}
+.is-in .dr { stroke-dashoffset: 0; }
+
+/* Energy moving along a line: dashes flowing in the path direction */
+@keyframes flow { to { stroke-dashoffset: -1; } }
+.flow {
+  stroke-dasharray: 0.02 0.06;
+  animation: flow 6s linear infinite;
+}
+
+/* Arrow nudge on hover — Tata's signature link affordance */
+.nudge { transition: transform 400ms var(--ease-out); }
+.group:hover .nudge, .group:focus-visible .nudge { transform: translateX(6px); }
+
+/* Visitor opted out of motion (accessibility panel) — mirrors the OS rule */
+[data-motion="reduced"] .rv,
+[data-motion="reduced"] .sw > span,
+[data-motion="reduced"] .ir,
+[data-motion="reduced"] .ir img,
+[data-motion="reduced"] .dr {
+  transition: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: none !important;
+  stroke-dashoffset: 0 !important;
+}
+[data-motion="reduced"] *,
+[data-motion="reduced"] *::before,
+[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}
+
+/* Mega menu — curtain drop, staggered rows, re-staggering tiles */
+.mega {
+  visibility: hidden;
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 480ms var(--ease-inout), visibility 0s linear 480ms;
+}
+.mega.mega-open {
+  visibility: visible;
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 560ms var(--ease-inout), visibility 0s;
+}
+.mega-row {
+  opacity: 0;
+  transform: translate3d(-24px, 0, 0);
+  transition: opacity 500ms var(--ease-out), transform 600ms var(--ease-out);
+}
+.mega-open .mega-row {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(180ms + var(--i) * 45ms);
+}
+.mega-tile {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition: opacity 500ms var(--ease-out) var(--d), transform 700ms var(--ease-out) var(--d);
+}
+.mega-tile.shown { opacity: 1; transform: none; }
+.mega-blurb, .mega-foot { opacity: 0; transition: opacity 500ms var(--ease-out); }
+.mega-open .mega-blurb, .mega-open .mega-foot { opacity: 1; transition-delay: 320ms; }
+
+/* Page-transition curtain */
+.curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  overflow: hidden;
+  background: #06121f;
+  border-top: 2px solid #13c2b6;
+  transform: translate3d(0, 100%, 0);
+  visibility: hidden;
+}
+.curtain-cover {
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0);
+  transition: transform 320ms var(--ease-inout);
+}
+.curtain-reveal {
+  visibility: visible;
+  transform: translate3d(0, -100%, 0);
+  transition: transform 460ms var(--ease-inout);
+}
+/* Incoming page reveals wait for the curtain to start lifting */
+.rv, .sw > span { transition-delay: calc(var(--d, 0ms) + var(--enter, 0ms)); }
+
+/* Hero photo settles from a slight zoom on page load */
+@keyframes heroSettle { from { transform: scale(1.12); } to { transform: scale(1); } }
+.hero-settle { animation: heroSettle 2.4s var(--ease-out) both; }
+
+/* Energy landscape (How we trade): strokes drawn by scroll progress --p */
+.ls {
+  stroke-dasharray: 1;
+  stroke-dashoffset: clamp(0, calc((var(--e) - var(--p, 1)) / (var(--e) - var(--s))), 1);
+}
+.stage { color: rgba(248, 245, 236, 0.32); transition: color 500ms var(--ease-out); }
+.stage-on { color: #2dd4bf; }
+.stage-label { fill: currentColor; stroke: none; font: 600 13px Outfit, system-ui, sans-serif; letter-spacing: 0.18em; }
+.border-line { opacity: calc(clamp(0, (var(--p, 1) - 0.7) * 6, 1)); }
+@keyframes pulseRing { from { transform: scale(1); opacity: 0.55; } to { transform: scale(1.9); opacity: 0; } }
+.pulse-ring { transform-box: fill-box; transform-origin: center; animation: pulseRing 2.4s var(--ease-out) infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 9s linear infinite; }
+[data-motion="reduced"] .particles, [data-motion="reduced"] .pulse-ring { display: none; }
+
+/* WAPP map nodes pop in once the map is in view */
+.map-node > * { transform-box: fill-box; transform-origin: center; }
+.map-node { opacity: 0; transition: opacity 600ms var(--ease-out) var(--d, 0ms); }
+.is-in .map-node { opacity: 1; }
+.map-node:focus-visible circle:nth-of-type(2) { stroke: #2dd4bf; stroke-width: 2; }
+
+/* Straight connector that draws left→right when its InView parent enters */
+.line-draw { transform: scaleX(0); transform-origin: left; transition: transform 1600ms var(--ease-inout) 200ms; }
+.is-in .line-draw { transform: scaleX(1); }
+[data-motion="reduced"] .line-draw { transform: none; transition: none; }
+
+/* Infinite horizontal strip */
+@keyframes marquee { to { transform: translate3d(-50%, 0, 0); } }
+.marquee { animation: marquee 40s linear infinite; }
+
+/* Homepage hero layers: approved photo (base) + 3D landscape loop (over).
+   The loop is feathered in from the right so the photo stays recognisable;
+   at night only its light is added (screen), by day it sits over softly. */
+.hero-loop {
+  -webkit-mask-image: linear-gradient(to right, transparent 26%, #000 64%);
+  mask-image: linear-gradient(to right, transparent 26%, #000 64%);
+}
+.hero-loop-night { mix-blend-mode: screen; }
+.hero-loop-day { opacity: 1; }
+.hero-loop-day.opacity-40 { opacity: 0.4; }
+@media (max-width: 767px) {
+  .hero-loop {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 34%, #000 66%);
+    mask-image: linear-gradient(to bottom, transparent 34%, #000 66%);
+  }
+}
+@keyframes heroDrift { from { transform: scale(1); } to { transform: scale(1.07); } }
+.hero-drift { animation: heroDrift 9s var(--ease-out) forwards; }
+
+/* =====================================================
+   Energy-ecosystem story (EcosystemStory.jsx)
+   Palette per scene mode; entrance staged with --d delays, then ambient.
+   ===================================================== */
+.eco {
+  --eco-bg: #06121f;
+  --eco-title: #ffffff;
+  --eco-body: rgba(255, 255, 255, 0.72);
+  --eco-muted: rgba(248, 245, 236, 0.5);
+  --eco-accent: #2dd4bf;
+  --eco-dot: rgba(248, 245, 236, 0.17);
+  --eco-dot-ng: #13c2b6;
+  --eco-mesh: rgba(138, 160, 184, 0.28);
+  --eco-in: rgba(247, 185, 85, 0.5);
+  --eco-out: rgba(45, 212, 191, 0.5);
+  --eco-p-in: #f7b955;
+  --eco-p-out: #7ff5e8;
+  --eco-gen: #f5a623;
+  --eco-demand: #2dd4bf;
+  --eco-hub: #13c2b6;
+  --eco-hub-core: #e9fffc;
+  --eco-glow: #13c2b6;
+  --eco-rnode: rgba(248, 245, 236, 0.45);
+  --eco-rnode-lit: #2dd4bf;
+  --eco-step-bar: rgba(248, 245, 236, 0.18);
+  background: radial-gradient(ellipse 70% 60% at 62% 62%, #0c2340 0%, var(--eco-bg) 70%);
+  color: var(--eco-body);
+}
+.eco[data-mode="day"] {
+  --eco-bg: #f4f7f9;
+  --eco-title: #0a1f3c;
+  --eco-body: #3f5166;
+  --eco-muted: rgba(10, 31, 60, 0.55);
+  --eco-accent: #0b8f84;
+  --eco-dot: rgba(10, 31, 60, 0.16);
+  --eco-dot-ng: #0fb5a6;
+  --eco-mesh: rgba(10, 31, 60, 0.2);
+  --eco-in: rgba(217, 130, 11, 0.55);
+  --eco-out: rgba(11, 143, 132, 0.55);
+  --eco-p-in: #d9820b;
+  --eco-p-out: #0b8f84;
+  --eco-gen: #d9820b;
+  --eco-demand: #0b8f84;
+  --eco-hub: #0b8f84;
+  --eco-hub-core: #0a1f3c;
+  --eco-glow: #13c2b6;
+  --eco-rnode: rgba(10, 31, 60, 0.35);
+  --eco-rnode-lit: #0b8f84;
+  --eco-step-bar: rgba(10, 31, 60, 0.15);
+  background: radial-gradient(ellipse 70% 60% at 62% 62%, #ffffff 0%, var(--eco-bg) 70%);
+}
+.eco { transition: background-color 600ms var(--ease-out); }
+.eco-eyebrow { color: var(--eco-accent); }
+.eco-title { color: var(--eco-title); }
+.eco-accent { color: var(--eco-accent); }
+.eco-body, .eco-step-body { color: var(--eco-body); }
+.eco-note, .eco-handoff-label, .eco-key { color: var(--eco-muted); }
+.eco-dots { stroke: var(--eco-dot); fill: none; }
+.eco-coast { fill: none; stroke: var(--eco-accent); stroke-width: 1.4; opacity: 0.55; transition-duration: 2600ms; }
+.eco-dots-ng { stroke: var(--eco-dot-ng); fill: none; opacity: 0.6; }
+.eco-country { fill: var(--eco-accent); font: 600 22px Outfit, system-ui, sans-serif; letter-spacing: 0.34em; opacity: 0.85; }
+.eco-region { fill: var(--eco-muted); font: 500 15px Outfit, system-ui, sans-serif; letter-spacing: 0.3em; }
+.eco-mesh-line { fill: none; stroke: var(--eco-mesh); stroke-width: 1.2; }
+.eco-in-line { fill: none; stroke: var(--eco-in); stroke-width: 1.6; }
+.eco-out-line { fill: none; stroke: var(--eco-out); stroke-width: 1.6; }
+.eco-office-link { fill: none; stroke: var(--eco-hub); stroke-width: 1.4; stroke-dasharray: 1; opacity: 0.8; }
+.eco-p-in { fill: var(--eco-p-in); }
+.eco-p-out { fill: var(--eco-p-out); }
+.eco-gen-ring { fill: none; stroke: var(--eco-gen); stroke-width: 1.6; opacity: 0.8; }
+.eco-gen-core { fill: var(--eco-gen); }
+.eco-demand-node { fill: var(--eco-demand); }
+.eco-rnode { fill: var(--eco-rnode); }
+.eco-office-dot { fill: var(--eco-hub); }
+.eco-small-label { fill: var(--eco-muted); font: 500 15px Outfit, system-ui, sans-serif; letter-spacing: 0.06em; }
+.eco-hub-label { fill: var(--eco-title); font: 700 20px Outfit, system-ui, sans-serif; letter-spacing: 0.32em; }
+.eco-market-ring { fill: none; stroke: var(--eco-hub); stroke-width: 1.5; stroke-dasharray: 3 7; opacity: 0.8; }
+.eco-market-inner { fill: none; stroke: var(--eco-hub); stroke-width: 2; opacity: 0.9; }
+.eco-core { fill: var(--eco-hub); stroke: var(--eco-hub-core); stroke-width: 3; }
+.eco-transact { fill: none; stroke: var(--eco-hub); stroke-width: 2; opacity: 0; }
+.eco-ripple { fill: none; stroke: var(--eco-accent); stroke-width: 1.4; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.eco-step-bar { background: var(--eco-step-bar); position: relative; overflow: hidden; }
+.eco-step-bar::after { content: ""; position: absolute; inset: 0; background: var(--eco-accent); transform: scaleX(0); transform-origin: left; transition: transform 900ms var(--ease-out) var(--d); }
+.eco-step p:first-of-type { color: var(--eco-muted); transition: color 600ms var(--ease-out) var(--d); }
+.eco-step-title { color: var(--eco-title); opacity: 0.45; transition: opacity 600ms var(--ease-out) var(--d); }
+.eco-key-gen, .eco-key-hub, .eco-key-dem { display: inline-block; width: 9px; height: 9px; }
+.eco-key-gen { border-radius: 50%; border: 1.6px solid var(--eco-gen); }
+.eco-key-hub { border-radius: 50%; background: var(--eco-hub); }
+.eco-key-dem { background: var(--eco-demand); }
+.eco-handoff { background: linear-gradient(var(--eco-accent), transparent); transform: scaleY(0); transform-origin: top; transition: transform 1200ms var(--ease-inout) 4600ms; }
+
+/* Explore Nigeria (interactive zones and nodes) */
+.eco { --eco-card-bg: rgba(10, 31, 60, 0.82); --eco-card-border: rgba(248, 245, 236, 0.14); }
+.eco[data-mode="day"] { --eco-card-bg: rgba(255, 255, 255, 0.92); --eco-card-border: rgba(10, 31, 60, 0.1); }
+.eco-zone { transition: opacity 400ms var(--ease-out), stroke 400ms var(--ease-out); }
+.eco-exploring .eco-zone { opacity: 0.22; }
+.eco-exploring .eco-zone.on { opacity: 1; stroke: var(--eco-accent); }
+.eco-zone-label { fill: var(--eco-title); font: 700 15px Outfit, system-ui, sans-serif; letter-spacing: 0.24em; paint-order: stroke; stroke: var(--eco-bg); stroke-width: 5px; pointer-events: none; }
+.eco-hit, .eco-clickable { cursor: pointer; outline: none; }
+.eco-clickable:focus-visible .eco-gen-ring, .eco-clickable:focus-visible .eco-demand-node,
+.eco-clickable:focus-visible .eco-office-dot, .eco-clickable:focus-visible .eco-core { stroke: var(--eco-title); stroke-width: 3; }
+.eco-hit:focus-visible { stroke: var(--eco-accent); stroke-opacity: 0.15; }
+.eco-kind-on .eco-gen-ring { stroke-width: 3; opacity: 1; }
+.eco-kind-on .eco-demand-node { stroke: var(--eco-title); stroke-width: 2; }
+.eco-card {
+  position: relative;
+  background: var(--eco-card-bg);
+  border: 1px solid var(--eco-card-border);
+  padding: 1.1rem 1.25rem 1.2rem;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 12px 30px rgba(6, 18, 31, 0.18);
+}
+.eco-card-eyebrow { font: 500 11px Outfit, system-ui, sans-serif; letter-spacing: 0.2em; text-transform: uppercase; color: var(--eco-accent); }
+.eco-card-title { margin-top: 0.35rem; font-family: Syne, system-ui, sans-serif; font-size: 1.25rem; font-weight: 500; color: var(--eco-title); }
+.eco-card-body { margin-top: 0.45rem; font-size: 0.875rem; line-height: 1.5; color: var(--eco-body); }
+.eco-card-states { margin-top: 0.7rem; font-size: 0.75rem; line-height: 1.5; color: var(--eco-muted); }
+.eco-card-link { display: inline-flex; gap: 0.4rem; margin-top: 0.8rem; font-size: 0.8rem; font-weight: 600; color: var(--eco-accent); }
+.eco-card-clear { position: absolute; right: 0.6rem; top: 0.4rem; font-size: 1.1rem; line-height: 1; color: var(--eco-muted); }
+.eco-card-clear:hover { color: var(--eco-title); }
+
+/* Entrance (runs once when the composition enters the viewport) */
+.eco-map { opacity: 0; transform: scale(1.03); transform-origin: 62% 60%; transition: opacity 1400ms var(--ease-out), transform 2200ms var(--ease-out); }
+.eco-ng, .eco-labels { opacity: 0; transition: opacity 1200ms var(--ease-out) 500ms; }
+.eco-node, .eco-rnode { opacity: 0; transform: scale(0.3); transform-box: fill-box; transform-origin: center; transition: opacity 600ms var(--ease-out) var(--d), transform 700ms var(--ease-out) var(--d); }
+.eco-hub { opacity: 0; transform: scale(0.7); transition: opacity 900ms var(--ease-out) 2600ms, transform 1100ms var(--ease-out) 2600ms; }
+.eco-office { opacity: 0; transition: opacity 700ms var(--ease-out) 2900ms; }
+.eco-particles, .eco-key { opacity: 0; transition: opacity 1200ms var(--ease-out) 4000ms; }
+.is-in .eco-map { opacity: 1; transform: none; }
+.is-in .eco-ng, .is-in .eco-labels, .is-in .eco-office, .is-in .eco-particles, .is-in .eco-key { opacity: 1; }
+.is-in .eco-node, .is-in .eco-rnode { opacity: 1; transform: none; }
+.is-in .eco-hub { opacity: 1; transform: none; }
+.is-in .eco-step-bar::after { transform: scaleX(1); }
+.is-in .eco-step p:first-of-type { color: var(--eco-accent); }
+.is-in .eco-step-title { opacity: 1; }
+.is-in .eco-handoff { transform: scaleY(1); }
+
+/* Ambient state (starts after the entrance has settled) */
+@keyframes ecoTurn { to { transform: rotate(360deg); } }
+@keyframes ecoCore { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+@keyframes ecoTransact { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(5.5); } }
+@keyframes ecoRipple { 0% { opacity: 0.55; transform: scale(1); } 70% { opacity: 0.08; } 100% { opacity: 0; transform: scale(26); } }
+@keyframes ecoLight { 0%, 100% { fill: var(--eco-rnode); } 6% { fill: var(--eco-rnode-lit); } 22% { fill: var(--eco-rnode); } }
+.is-in .eco-market-ring { animation: ecoTurn 60s linear infinite 3s; }
+.is-in .eco-core { animation: ecoCore 3.6s var(--ease-inout) infinite 3.4s; }
+.is-in .eco-transact { animation: ecoTransact 4.8s var(--ease-out) infinite 4.2s; }
+.is-in .eco-ripple { animation: ecoRipple 8s var(--ease-out) infinite; }
+.is-in .eco-rnode { animation: ecoLight 8s linear infinite; }
+.eco-paused *, .eco-paused { animation-play-state: paused !important; }
+[data-motion="reduced"] .eco-map, [data-motion="reduced"] .eco-ng, [data-motion="reduced"] .eco-labels,
+[data-motion="reduced"] .eco-node, [data-motion="reduced"] .eco-rnode, [data-motion="reduced"] .eco-hub,
+[data-motion="reduced"] .eco-office, [data-motion="reduced"] .eco-key, [data-motion="reduced"] .eco-handoff {
+  opacity: 1 !important; transform: none !important; transition: none !important;
+}
+[data-motion="reduced"] .eco-step-bar::after { transform: scaleX(1); transition: none; }
+[data-motion="reduced"] .eco-step-title { opacity: 1; }
+[data-motion="reduced"] .eco-ripple, [data-motion="reduced"] .eco-transact { display: none; }
+
+/* Hamburger ↔ close morph */
+.burger line { transition: transform 400ms var(--ease-inout), opacity 200ms linear; transform-box: fill-box; transform-origin: center; }
+.burger[data-open="true"] .b1 { transform: translateY(5px) rotate(45deg); }
+.burger[data-open="true"] .b2 { opacity: 0; }
+.burger[data-open="true"] .b3 { transform: translateY(-5px) rotate(-45deg); }
+
+/* Text size set in the accessibility panel */
+html[data-text-size="lg"] { font-size: 112.5%; }
+html[data-text-size="xl"] { font-size: 125%; }
 
 /* Scrollbar — teal to match the rest of the brand system (navy/teal, see
    tailwind.config.js). Chrome/Safari/Edge via ::-webkit-scrollbar; Firefox

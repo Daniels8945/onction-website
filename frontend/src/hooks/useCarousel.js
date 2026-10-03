@@ -1,27 +1,45 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { isMotionReduced } from "../motion/motionPreference.js";
 
 // Shared carousel state used by Hero, CaseStudies and Testimonials.
 // autoMs = 0 disables auto-advance.
-export function useCarousel(count, autoMs = 0) {
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+// pauseOnHover: stop while the pointer is over the carousel. The hero turns
+// this off — it fills the first screen, so the pointer is nearly always on it
+// and it would never advance. Manual navigation restarts the timer either way,
+// so a slide the visitor picked doesn't jump away a moment later. Keyboard
+// focus inside the carousel always pauses it (WCAG 2.2.2).
+export function useCarousel(count, autoMs = 0, { pauseOnHover = true } = {}) {
+  const [index, setIndexRaw] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [restart, setRestart] = useState(0);
+  const paused = focused || (pauseOnHover && hovered);
 
   useEffect(() => {
     if (!autoMs || paused) return;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    const t = setInterval(() => setIndex((v) => (v + 1) % count), autoMs);
+    if (isMotionReduced()) return;
+    const t = setInterval(() => setIndexRaw((v) => (v + 1) % count), autoMs);
     return () => clearInterval(t);
-  }, [paused, count, autoMs]);
+  }, [paused, count, autoMs, restart]);
+
+  const manual = useCallback((update) => {
+    setIndexRaw(update);
+    setRestart((r) => r + 1);
+  }, []);
 
   return {
     index,
-    setIndex,
-    prev: () => setIndex((v) => (v - 1 + count) % count),
-    next: () => setIndex((v) => (v + 1) % count),
-    // Spread onto the carousel container to pause auto-advance on hover.
+    setIndex: (i) => manual(i),
+    prev: () => manual((v) => (v - 1 + count) % count),
+    next: () => manual((v) => (v + 1) % count),
+    // Spread onto the carousel container.
     pauseHandlers: {
-      onMouseEnter: () => setPaused(true),
-      onMouseLeave: () => setPaused(false),
+      onMouseEnter: () => setHovered(true),
+      onMouseLeave: () => setHovered(false),
+      onFocus: (e) => e.target.matches?.(":focus-visible") && setFocused(true),
+      onBlur: (e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false);
+      },
     },
   };
 }

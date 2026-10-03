@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { usePageTransition } from "./layout/PageTransition.jsx";
+import { isAutoScrolling } from "../motion/tokens.js";
 import Logo from "./Logo.jsx";
-import { nav, company } from "../data/content.js";
-import { Arrow } from "./icons.jsx";
+import MegaMenu from "./nav/MegaMenu.jsx";
+import SearchOverlay from "./nav/SearchOverlay.jsx";
+import AccessibilityPanel from "./nav/AccessibilityPanel.jsx";
 
 // ─── Inline icon atoms (no external dependency) ──────────────────────────────
 
@@ -42,23 +46,25 @@ function PersonIcon({ className = ICON_SIZE }) {
   );
 }
 
+// Three bars that fold into a close "×" (see .burger in index.css).
 function MenuIcon({ open, className = ICON_SIZE }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none"
+    <svg className={`burger ${className}`} data-open={open} viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" aria-hidden="true">
-      {open
-        ? <path d="M6 6 18 18M18 6 6 18" />
-        : <path d="M3 7h18M3 12h18M3 17h18" />}
+      <line className="b1" x1="3" y1="7" x2="21" y2="7" />
+      <line className="b2" x1="3" y1="12" x2="21" y2="12" />
+      <line className="b3" x1="3" y1="17" x2="21" y2="17" />
     </svg>
   );
 }
 
 // ─── Reusable icon button for the top-right icon group ───────────────────────
-function HeaderIconBtn({ label, onClick, children }) {
+function HeaderIconBtn({ label, onClick, children, ...rest }) {
   return (
     <button
       onClick={onClick}
       aria-label={label}
+      {...rest}
       className="flex h-full items-center px-2 text-[#f8f5ec] transition-colors hover:text-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50 sm:px-[clamp(1.1rem,2.2vw,2.4rem)]"
     >
       {children}
@@ -67,16 +73,95 @@ function HeaderIconBtn({ label, onClick, children }) {
 }
 
 // ─── Main Header ─────────────────────────────────────────────────────────────
+// The top bar is the approved design (Tata's persistent dark bar with
+// Search | Help | Accessibility | Menu). Behaviour added around it:
+//   • compacts once the page scrolls, hides while reading down the page and
+//     slides back on any upward scroll (never while a panel is open)
+//   • Search → SearchOverlay, Help → /contact, Accessibility →
+//     AccessibilityPanel, Menu → the full-screen MegaMenu
 export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [panel, setPanel] = useState(null); // null | "menu" | "search" | "a11y"
+  const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [barHeight, setBarHeight] = useState(91);
+  const barRef = useRef(null);
+  const location = useLocation();
+  const { go } = usePageTransition();
 
-  const closeMenu = () => setMenuOpen(false);
+  const close = useCallback(() => setPanel(null), []);
+  const toggle = (name) => setPanel((p) => (p === name ? null : name));
+
+  // While the menu or search covers the page, take the page out of the tab
+  // order / accessibility tree; hand focus back to the opener on close.
+  const openerRef = useRef(null);
+  useEffect(() => {
+    const covering = panel === "menu" || panel === "search";
+    ["main", "site-footer", "skip-link"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.inert = covering;
+    });
+    if (panel) {
+      openerRef.current = document.activeElement;
+    } else if (openerRef.current?.isConnected) {
+      openerRef.current.focus({ preventScroll: true });
+      openerRef.current = null;
+    }
+  }, [panel]);
+
+  // Any navigation closes whatever is open.
+  useEffect(() => setPanel(null), [location.pathname, location.hash]);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let frame = 0;
+    function update() {
+      frame = 0;
+      const y = window.scrollY;
+      setScrolled(y > 24);
+      if (isAutoScrolling()) {
+        setHidden(false);
+        lastY = y;
+      } else if (Math.abs(y - lastY) > 6) {
+        setHidden(y > lastY && y > 480);
+        lastY = y;
+      }
+    }
+    function onScroll() {
+      if (!frame) frame = requestAnimationFrame(update);
+    }
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  // Overlays sit directly under the bar, so track its live height.
+  useLayoutEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setBarHeight(el.getBoundingClientRect().height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const pinned = panel !== null;
 
   return (
     <>
       {/* ── Top bar — always dark, matching TATA Power's persistent header ── */}
-      <header className="fixed inset-x-0 top-0 z-50 bg-navy-950">
-        <div className="wrap flex h-[clamp(64px,7.5vw,91px)] items-center justify-between">
+      <header
+        className={`fixed inset-x-0 top-0 z-50 bg-navy-950 transition-[transform,box-shadow] duration-500 ease-in-out-quart ${
+          hidden && !pinned ? "-translate-y-full" : "translate-y-0"
+        } ${scrolled && !pinned ? "shadow-[0_8px_30px_rgba(6,18,31,0.35)]" : ""}`}
+      >
+        <div
+          ref={barRef}
+          className={`wrap relative flex items-center justify-between transition-[height] duration-500 ease-in-out-quart ${
+            scrolled && !pinned ? "h-16 sm:h-[70px]" : "h-[clamp(64px,7.5vw,91px)]"
+          }`}
+        >
           <Logo />
 
           {/*
@@ -84,123 +169,37 @@ export default function Header() {
             matching TATA's: Search | Help | Person | Menu
           */}
           <div className="flex h-16F gap-4 items-stretch divide-x divide-white/[0.30]">
-            <HeaderIconBtn label="Search">
+            <HeaderIconBtn label="Search" aria-expanded={panel === "search"} onClick={() => toggle("search")}>
               <SearchIcon/>
             </HeaderIconBtn>
 
             <HeaderIconBtn
               label="Help and support"
-              onClick={() => { window.location.href = "#enquire"; }}
+              onClick={() => go("/contact")}
             >
               <HelpIcon />
             </HeaderIconBtn>
 
-            <HeaderIconBtn label="Accessibility">
+            <HeaderIconBtn label="Accessibility" data-a11y-toggle aria-expanded={panel === "a11y"} onClick={() => toggle("a11y")}>
               <PersonIcon />
             </HeaderIconBtn>
 
             <HeaderIconBtn
-              label={menuOpen ? "Close navigation" : "Open navigation"}
-              onClick={() => setMenuOpen((v) => !v)}
+              label={panel === "menu" ? "Close navigation" : "Open navigation"}
+              aria-expanded={panel === "menu"}
+              aria-controls="site-menu"
+              onClick={() => toggle("menu")}
             >
-              <MenuIcon open={menuOpen} />
+              <MenuIcon open={panel === "menu"} />
             </HeaderIconBtn>
           </div>
+
+          <AccessibilityPanel open={panel === "a11y"} onClose={close} anchorRight="clamp(1.25rem,3vw,4rem)" />
         </div>
       </header>
 
-      {/* ── Navigation drawer overlay ─────────────────────────────────────── */}
-      {/*
-        Visibility wrapper: keeps the drawer in the DOM so the slide-out
-        transition can play, but removes pointer events when closed.
-      */}
-      <div
-        className={`fixed inset-0 z-40 transition-all duration-300 ${
-          menuOpen ? "visible" : "invisible pointer-events-none"
-        }`}
-      >
-        {/* Backdrop */}
-        <div
-          aria-hidden="true"
-          onClick={closeMenu}
-          className={`absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300 ${
-            menuOpen ? "opacity-100" : "opacity-0"
-          }`}
-        />
-
-        {/* Drawer — slides in from the right */}
-        <div
-          className={`absolute right-0 top-0 flex h-full w-[300px] flex-col bg-navy-900 shadow-2xl transition-transform duration-300 ease-in-out sm:w-[340px] ${
-            menuOpen ? "translate-x-0" : "translate-x-full"
-          }`}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Site navigation"
-        >
-          {/* Drawer header */}
-          <div className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-7">
-            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-teal-400">
-              Navigation
-            </p>
-            <button
-              onClick={closeMenu}
-              aria-label="Close navigation"
-              className="text-white/50 hover:text-teal-400"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                <path d="M6 6 18 18M18 6 6 18" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Nav links */}
-          <nav className="flex-1 overflow-y-auto px-7 py-6" aria-label="Primary">
-            {nav.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={closeMenu}
-                className="group flex items-center justify-between border-b border-white/[0.07] py-4 text-[15px] font-medium text-white/75 transition-colors hover:text-teal-400"
-              >
-                {item.label}
-                <Arrow
-                  width={15}
-                  height={15}
-                  className="text-teal-500 opacity-0 transition-opacity group-hover:opacity-100"
-                />
-              </a>
-            ))}
-
-            <a
-              href="#enquire"
-              onClick={closeMenu}
-              className="btn-primary mt-8 w-full justify-center"
-            >
-              Enquire now <Arrow width={17} height={17} />
-            </a>
-          </nav>
-
-          {/* Drawer footer — contact at a glance */}
-          <div className="shrink-0 border-t border-white/10 px-7 py-5">
-            <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-teal-400">
-              Trading desk
-            </p>
-            <a
-              href={`tel:${company.phoneHref}`}
-              className="mt-1.5 block text-sm font-medium text-white/70 hover:text-teal-400"
-            >
-              {company.phone}
-            </a>
-            <a
-              href={`mailto:${company.email}`}
-              className="mt-0.5 block text-sm text-white/50 hover:text-teal-400"
-            >
-              {company.email}
-            </a>
-          </div>
-        </div>
-      </div>
+      <SearchOverlay open={panel === "search"} onClose={close} top={barHeight} />
+      <MegaMenu open={panel === "menu"} onClose={close} top={barHeight} />
     </>
   );
 }

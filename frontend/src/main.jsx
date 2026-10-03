@@ -2,6 +2,9 @@ import React, { Suspense, lazy } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import App from "./App.jsx";
+import SiteLayout from "./components/layout/SiteLayout.jsx";
+import { pageLoaders } from "./pages/registry.js";
+import { applyStoredTextSize } from "./components/nav/AccessibilityPanel.jsx";
 import { usePageviewTracking } from "./hooks/usePageviewTracking.js";
 import { AuthProvider } from "./admin/AuthContext.jsx";
 import { VendorAuthProvider } from "./vendor-portal/VendorAuthContext.jsx";
@@ -11,14 +14,26 @@ import "./index.css";
 // renderer) out of the landing page's bundle — a marketing-site visitor
 // should never pay for recharts + the page builder just to load "/".
 const DynamicPage = lazy(() => import("./DynamicPage.jsx"));
-const NewsList = lazy(() => import("./public/NewsList.jsx"));
+const NewsList = lazy(pageLoaders["/news"]);
 const NewsDetail = lazy(() => import("./public/NewsDetail.jsx"));
-const EventsList = lazy(() => import("./public/EventsList.jsx"));
+const EventsList = lazy(pageLoaders["/events"]);
 const EventDetail = lazy(() => import("./public/EventDetail.jsx"));
 const Unsubscribe = lazy(() => import("./public/Unsubscribe.jsx"));
+const AboutPage = lazy(pageLoaders["/about"]);
+const SolutionsPage = lazy(pageLoaders["/solutions"]);
+const HowWeTradePage = lazy(pageLoaders["/how-we-trade"]);
+const MarketPage = lazy(pageLoaders["/market"]);
+const SustainabilityPage = lazy(pageLoaders["/sustainability"]);
+const CaseStudiesPage = lazy(pageLoaders["/case-studies"]);
+const PartnersPage = lazy(pageLoaders["/partners"]);
+const ContactPage = lazy(pageLoaders["/contact"]);
+const SitemapPage = lazy(pageLoaders["/sitemap"]);
+const CookiesPage = lazy(pageLoaders["/cookies"]);
 
 const ProtectedRoute = lazy(() => import("./admin/ProtectedRoute.jsx"));
 const LoginPage = lazy(() => import("./admin/LoginPage.jsx"));
+const AdminForgotPasswordPage = lazy(() => import("./admin/PasswordResetPages.jsx").then((m) => ({ default: m.AdminForgotPasswordPage })));
+const AdminResetPasswordPage = lazy(() => import("./admin/PasswordResetPages.jsx").then((m) => ({ default: m.AdminResetPasswordPage })));
 const AdminLayout = lazy(() => import("./admin/AdminLayout.jsx"));
 const AnalyticsPage = lazy(() => import("./admin/pages/AnalyticsPage.jsx"));
 const EnquiriesPage = lazy(() => import("./admin/pages/EnquiriesPage.jsx"));
@@ -65,14 +80,30 @@ function MainSiteRoutes() {
   return (
     <Suspense fallback={null}>
       <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/news" element={<NewsList />} />
-        <Route path="/news/:slug" element={<NewsDetail />} />
-        <Route path="/events" element={<EventsList />} />
-        <Route path="/events/:slug" element={<EventDetail />} />
-        <Route path="/unsubscribe" element={<Unsubscribe />} />
+        <Route element={<SiteLayout />}>
+          <Route path="/" element={<App />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/solutions" element={<SolutionsPage />} />
+          <Route path="/how-we-trade" element={<HowWeTradePage />} />
+          <Route path="/market" element={<MarketPage />} />
+          <Route path="/sustainability" element={<SustainabilityPage />} />
+          <Route path="/case-studies" element={<CaseStudiesPage />} />
+          <Route path="/partners" element={<PartnersPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/sitemap" element={<SitemapPage />} />
+          <Route path="/cookies" element={<CookiesPage />} />
+          <Route path="/news" element={<NewsList />} />
+          <Route path="/news/:slug" element={<NewsDetail />} />
+          <Route path="/events" element={<EventsList />} />
+          <Route path="/events/:slug" element={<EventDetail />} />
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
+          {/* Catch-all: any other path is a dashboard-built page, e.g. /about-us */}
+          <Route path="/:slug" element={<DynamicPage />} />
+        </Route>
 
         <Route path="/admin/login" element={<LoginPage />} />
+        <Route path="/admin/forgot-password" element={<AdminForgotPasswordPage />} />
+        <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
         <Route
           path="/admin"
           element={
@@ -103,8 +134,6 @@ function MainSiteRoutes() {
           <Route path="vendor-settings" element={<VendorSettingsPage />} />
         </Route>
 
-        {/* Catch-all: any other path is a dashboard-built page, e.g. /about */}
-        <Route path="/:slug" element={<DynamicPage />} />
       </Routes>
     </Suspense>
   );
@@ -136,6 +165,23 @@ function VendorPortalRoutes() {
     </Suspense>
   );
 }
+
+applyStoredTextSize();
+
+// After a new deploy, a tab still running the previous build can ask for a
+// page chunk that no longer exists. Reload once to pick up the new build
+// instead of showing an error (guarded so it can never loop).
+window.addEventListener("vite:preloadError", (event) => {
+  const KEY = "onction:reloaded-for-update";
+  try {
+    if (sessionStorage.getItem(KEY)) return;
+    sessionStorage.setItem(KEY, "1");
+  } catch {
+    return;
+  }
+  event.preventDefault();
+  window.location.reload();
+});
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

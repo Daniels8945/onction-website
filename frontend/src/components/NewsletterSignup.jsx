@@ -24,7 +24,7 @@ export default function NewsletterSignup() {
   }
 
   if (status === "done") {
-    return <p className="text-sm text-teal-400">You're subscribed — thanks for joining.</p>;
+    return <p className="text-sm text-teal-400" role="status">You're subscribed — check your inbox for a welcome email.</p>;
   }
 
   return (

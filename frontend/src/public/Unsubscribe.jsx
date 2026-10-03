@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import Header from "../components/Header.jsx";
-import Footer from "../components/Footer.jsx";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
@@ -16,7 +14,8 @@ export default function Unsubscribe() {
       return;
     }
     fetch(`${API_BASE}/api/newsletter/unsubscribe?token=${encodeURIComponent(token)}`)
-      .then((res) => {
+      .then(async (res) => {
+        await res.text(); // read the body so the request completes
         if (!res.ok) throw new Error();
         setStatus("done");
       })
@@ -25,8 +24,7 @@ export default function Unsubscribe() {
 
   return (
     <>
-      <Header />
-      <main className="wrap flex min-h-[50vh] flex-col items-center justify-center text-center">
+      <main className="wrap flex min-h-[70vh] flex-col items-center justify-center pt-28 text-center">
         {status === "loading" && <p className="text-sm text-slatey">Unsubscribing…</p>}
         {status === "done" && (
           <>
@@ -41,7 +39,6 @@ export default function Unsubscribe() {
           </>
         )}
       </main>
-      <Footer />
     </>
   );
 }

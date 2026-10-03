@@ -2,9 +2,12 @@
 // so it disappears when the tab closes — that's what lets the backend group
 // pageviews into a "session" and attribute an enquiry/registration back to
 // the channel that produced it, without persisting anything long-term.
+import { analyticsAllowed } from "./consent.js";
+
 const SESSION_KEY = "onction_sid";
 
 export function getSessionId() {
+  if (!analyticsAllowed()) return null; // analytics consent only
   try {
     let id = sessionStorage.getItem(SESSION_KEY);
     if (!id) {

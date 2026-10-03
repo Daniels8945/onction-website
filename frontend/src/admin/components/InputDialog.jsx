@@ -1,8 +1,21 @@
 import { useEffect, useRef, useState } from "react";
+import { Button, Field, Input, Modal, Textarea } from "./ui.jsx";
 
 // A styled stand-in for window.prompt(), rendered via usePromptDialog().
-// Confirms on Enter, cancels on Escape or backdrop click.
-export default function InputDialog({ title, label, placeholder, defaultValue, confirmLabel = "Create", onConfirm, onCancel }) {
+// Submits on Enter (Cmd/Ctrl+Enter when multiline), cancels on Escape or
+// backdrop click.
+export default function InputDialog({
+  title,
+  message,
+  label,
+  placeholder,
+  defaultValue,
+  confirmLabel = "Create",
+  destructive = false,
+  multiline = false,
+  onConfirm,
+  onCancel,
+}) {
   const [value, setValue] = useState(defaultValue || "");
   const inputRef = useRef(null);
 
@@ -11,14 +24,6 @@ export default function InputDialog({ title, label, placeholder, defaultValue, c
     inputRef.current?.select();
   }, []);
 
-  useEffect(() => {
-    function handleKeyDown(e) {
-      if (e.key === "Escape") onCancel();
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onCancel]);
-
   function handleSubmit(e) {
     e.preventDefault();
     if (!value.trim()) return;
@@ -26,30 +31,41 @@ export default function InputDialog({ title, label, placeholder, defaultValue, c
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-navy-950/50 px-4" onClick={onCancel}>
-      <form
-        onSubmit={handleSubmit}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm border border-black/10 bg-white p-6 shadow-xl"
-      >
-        <p className="font-syne text-lg font-semibold text-ink">{title}</p>
-        {label && <label className="mb-1 mt-4 block text-xs font-medium text-slatey">{label}</label>}
-        <input
-          ref={inputRef}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder={placeholder}
-          className={`w-full border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500 ${label ? "" : "mt-4"}`}
-        />
-        <div className="mt-5 flex justify-end gap-3">
-          <button type="button" onClick={onCancel} className="text-sm text-slatey hover:text-ink">
-            Cancel
-          </button>
-          <button type="submit" disabled={!value.trim()} className="btn-primary disabled:opacity-60">
+    <Modal
+      title={title}
+      size="sm"
+      onClose={onCancel}
+      as="form"
+      formProps={{ onSubmit: handleSubmit }}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+          <Button type="submit" variant={destructive ? "danger" : "primary"} disabled={!value.trim()}>
             {confirmLabel}
-          </button>
-        </div>
-      </form>
-    </div>
+          </Button>
+        </>
+      }
+    >
+      {message && <div className="mb-4 text-sm leading-relaxed text-slatey">{message}</div>}
+      <Field label={label} required={!!label}>
+        {(a11y) =>
+          multiline ? (
+            <Textarea
+              {...a11y}
+              ref={inputRef}
+              rows={4}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit(e);
+              }}
+              placeholder={placeholder}
+            />
+          ) : (
+            <Input {...a11y} ref={inputRef} value={value} onChange={(e) => setValue(e.target.value)} placeholder={placeholder} />
+          )
+        }
+      </Field>
+    </Modal>
   );
 }

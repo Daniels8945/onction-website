@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import Header from "../components/Header.jsx";
-import Footer from "../components/Footer.jsx";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
@@ -29,12 +27,10 @@ export default function NewsDetail() {
   if (notFound) {
     return (
       <>
-        <Header />
-        <main className="wrap flex min-h-[50vh] flex-col items-center justify-center text-center">
+        <main className="wrap flex min-h-[70vh] flex-col items-center justify-center pt-28 text-center">
           <p className="eyebrow mb-2">404</p>
           <h1 className="font-syne text-2xl font-semibold text-ink">Post not found</h1>
         </main>
-        <Footer />
       </>
     );
   }
@@ -43,8 +39,7 @@ export default function NewsDetail() {
 
   return (
     <>
-      <Header />
-      <main className="wrap max-w-3xl py-20">
+      <main className="wrap max-w-3xl pb-20 pt-[calc(clamp(64px,7.5vw,91px)+3rem)]">
         <p className="eyebrow mb-2">{post.category}</p>
         <h1 className="font-syne text-3xl font-semibold text-ink md:text-4xl">{post.title}</h1>
         {post.published_at && <p className="mt-3 text-sm text-slatey">{new Date(post.published_at).toLocaleDateString()}</p>}
@@ -55,7 +50,6 @@ export default function NewsDetail() {
           ))}
         </div>
       </main>
-      <Footer />
     </>
   );
 }

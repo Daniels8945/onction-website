@@ -1,18 +1,33 @@
-import { company, nav, solutions } from "../data/content.js";
+import { Link } from "react-router-dom";
+import { company, solutions } from "../data/content.js";
+import { slugify } from "../data/site.js";
+import { openConsentBanner } from "../lib/consent.js";
 import { OnctionMark } from "./Logo.jsx";
 import NewsletterSignup from "./NewsletterSignup.jsx";
 
+const companyLinks = [
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
+  { label: "Business Solutions", href: "/solutions" },
+  { label: "How we trade", href: "/how-we-trade" },
+  { label: "Our market", href: "/market" },
+  { label: "GR0W", href: "/sustainability" },
+  { label: "Partners", href: "/partners" },
+  { label: "Contact", href: "/contact" },
+];
+
 const solutionLinks = solutions.items.slice(0, 5).map((s) => ({
   label: s.title,
-  href: "#solutions",
+  href: `/solutions#${slugify(s.title)}`,
 }));
 
 const resourceLinks = [
   { label: "Market News", href: "/news" },
   { label: "Events", href: "/events" },
-  { label: "NERC licensing portal", href: "#" },
-  { label: "WAPP market rules", href: "#" },
-  { label: "UN SDG 7", href: "#" },
+  { label: "Case studies", href: "/case-studies" },
+  { label: "NERC", href: "https://nerc.gov.ng/", external: true },
+  { label: "West African Power Pool", href: "https://www.ecowapp.org/", external: true },
+  { label: "UN SDG 7", href: "https://sdgs.un.org/goals/goal7", external: true },
   { label: "Compliance & policies", href: "#" },
 ];
 
@@ -86,20 +101,20 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-navy-950 text-white/70">
+    <footer id="site-footer" className="bg-navy-950 text-white/70">
       <div className="wrap py-16">
         {/* Brand block + nav columns sit side by side only above 1200px;
             centered and stacked below that, since medium screens don't
             have room for the side-by-side layout. */}
         <div className="grid grid-cols-1 gap-12 md:grid-cols-[auto_1fr] wide:gap-20">
           <div className="flex flex-col items-center text-center">
-            <a href="#top" aria-label="Onction Energy home" className="flex flex-col items-center gap-2 lg:items-center">
+            <Link to="/" aria-label="Onction Energy home" className="flex flex-col items-center gap-2 lg:items-center">
               <OnctionMark size={56} />
               <div className="flex items-center gap-1.5 font-outfit text-xl">
                 <span className="font-black tracking-tight text-white">ONCTION</span>
                 <span className="font-light text-white">ENERGY</span>
               </div>
-            </a>
+            </Link>
             {/* <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/55">
               A NERC-licensed bulk electricity trader providing a reliable route to market for
               clean and conventional power across West Africa.
@@ -107,7 +122,7 @@ export default function Footer() {
           </div>
 
           <div className="grid gap-10 sm:grid-cols-3">
-            <FooterCol heading="Company" links={nav} />
+            <FooterCol heading="Company" links={companyLinks} />
             <FooterCol heading="Business Solutions" links={solutionLinks} />
             <FooterCol heading="Regulatory & Resources" links={resourceLinks} />
           </div>
@@ -150,7 +165,9 @@ export default function Footer() {
             <a href="#" className="inline-flex items-center gap-1 hover:text-teal-400">
               Related Websites <ChevronDown />
             </a>
-            <a href="#" className="hover:text-teal-400">Sitemap</a>
+            <Link to="/sitemap" className="hover:text-teal-400">Sitemap</Link>
+            <Link to="/cookies" className="hover:text-teal-400">Cookies</Link>
+            <button type="button" onClick={openConsentBanner} className="hover:text-teal-400">Cookie settings</button>
             <a href="#" className="hover:text-teal-400">Disclaimer</a>
             <a href="#" className="hover:text-teal-400">Policies</a>
           </div>
@@ -181,9 +198,15 @@ function FooterCol({ heading, links }) {
       <ul className="mt-4 space-y-2.5 text-sm">
         {links.map((l) => (
           <li key={l.label}>
-            <a href={l.href} className="transition hover:text-teal-400">
-              {l.label}
-            </a>
+            {l.external ? (
+              <a href={l.href} target="_blank" rel="noreferrer" className="transition hover:text-teal-400">
+                {l.label} <span aria-hidden="true">↗</span>
+              </a>
+            ) : (
+              <Link to={l.href} className="transition hover:text-teal-400">
+                {l.label}
+              </Link>
+            )}
           </li>
         ))}
       </ul>

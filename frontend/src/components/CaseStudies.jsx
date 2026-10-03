@@ -3,7 +3,9 @@ import { caseStudies } from "../data/content.js";
 import SectionHeader from "./SectionHeader.jsx";
 import CarouselControls from "./CarouselControls.jsx";
 import Reveal from "./Reveal.jsx";
+import { Link } from "react-router-dom";
 import { Arrow } from "./icons.jsx";
+import { slugify } from "../data/site.js";
 
 // Shows 3 cards on desktop (wrapping), 1 on mobile. Prev/Next step by 1.
 export default function CaseStudies() {
@@ -57,6 +59,7 @@ export default function CaseStudies() {
 
 function CaseCard({ study }) {
   return (
+    <Link to={`/case-studies#${slugify(study.title)}`} className="group block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400">
     <article className="flex h-full flex-col rounded-none border border-white/10 bg-white/[0.04] p-6 backdrop-blur transition hover:border-teal-500/40 hover:bg-white/[0.07]">
       <p className="font-outfit text-xs uppercase tracking-[0.18em] text-teal-400">
         {study.category}
@@ -66,8 +69,9 @@ function CaseCard({ study }) {
       </h3>
       <p className="mt-3 text-sm leading-relaxed text-white/65">{study.body}</p>
       <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-teal-400">
-        Read more <Arrow width={14} height={14} />
+        Read more <Arrow width={14} height={14} className="nudge" />
       </span>
     </article>
+    </Link>
   );
 }

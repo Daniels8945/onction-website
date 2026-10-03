@@ -58,6 +58,12 @@ export default {
           "50%": { opacity: "0.35" },
         },
       },
+      // Motion tokens (see src/motion/tokens.js)
+      transitionDuration: { 400: "400ms", 600: "600ms", 900: "900ms" },
+      transitionTimingFunction: {
+        "out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "in-out-quart": "cubic-bezier(0.65, 0, 0.35, 1)",
+      },
       animation: {
         current: "current 6s linear infinite",
         fadeUp: "fadeUp 0.7s ease forwards",
