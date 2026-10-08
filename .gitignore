@@ -16,3 +16,7 @@ dist/
 .vscode/
 .idea/
 docker-compose.override.yml
+
+# Playwright
+test-results/
+playwright-report/

@@ -475,6 +475,11 @@
 .eco-hit:focus-visible { stroke: var(--eco-accent); stroke-opacity: 0.15; }
 .eco-kind-on .eco-gen-ring { stroke-width: 3; opacity: 1; }
 .eco-kind-on .eco-demand-node { stroke: var(--eco-title); stroke-width: 2; }
+/* Miniature infrastructure (EcoModels.jsx): once the models have loaded they
+   replace the generation/offtaker glyphs; the hover label names the asset. */
+.eco-modeled .eco-has-model .eco-gen-ring, .eco-modeled .eco-has-model .eco-gen-core, .eco-modeled .eco-has-model .eco-demand-node,
+.eco-modeled .eco-has-model .eco-rnode { visibility: hidden; }
+.eco-model-label { fill: var(--eco-title); paint-order: stroke; stroke: var(--eco-bg); stroke-width: 5px; pointer-events: none; }
 .eco-card {
   position: relative;
   background: var(--eco-card-bg);

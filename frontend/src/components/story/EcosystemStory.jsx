@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "../../motion/useInView.js";
 import { useSceneMode } from "../../motion/sceneMode.js";
 import { useReducedMotion } from "../../motion/motionPreference.js";
@@ -100,20 +100,76 @@ function buildDots() {
 // ── Participants (conceptual) ────────────────────────────────────────────
 const HUB = [3.4, 6.45]; // Lagos head office
 const ABUJA = [7.49, 9.06];
-const GEN_NG = [[6.0, 5.1], [7.1, 5.0], [5.6, 5.9], [4.1, 6.95], [4.6, 9.9], [5.0, 9.3], [6.8, 9.95], [8.6, 12.0], [11.2, 11.6], [6.2, 12.7], [9.4, 13.0]];
-const GEN_REGION = [[-0.1, 6.3], [-5.2, 6.4], [-11.0, 10.4], [-15.8, 14.9], [-1.5, 12.2], [-8.0, 12.6], [2.1, 13.5]];
-const DEMAND_NG = [[3.35, 6.62], [3.9, 7.4], [5.6, 6.34], [7.0, 4.8], [6.8, 6.15], [7.5, 6.45], ABUJA, [7.44, 10.5], [8.5, 12.0], [8.9, 9.9], [13.15, 11.8], [5.25, 13.06], [4.55, 8.5]];
-const DEMAND_REGION = [[-0.2, 5.6], [-4.0, 5.35], [1.2, 6.15], [2.4, 6.4], [-1.5, 12.37], [-8.0, 12.64], [2.1, 13.5], [-17.4, 14.7], [-13.7, 9.55], [-13.2, 8.48], [-10.8, 6.3], [-16.6, 13.45], [-15.6, 11.86]];
+const GEN_RAW = [[6.0, 5.1], [7.1, 5.0], [5.6, 5.9], [4.1, 6.95], [4.6, 9.9], [5.0, 9.3], [6.8, 9.95], [8.6, 12.0], [11.2, 11.6], [6.2, 12.7], [9.4, 13.0]];
+const GEN_REGION_RAW = [[-0.1, 6.3], [-5.2, 6.4], [-11.0, 10.4], [-15.8, 14.9], [-1.5, 12.2], [-8.0, 12.6], [2.1, 13.5]];
+const DEMAND_RAW = [[3.35, 6.62], [3.9, 7.4], [5.6, 6.34], [7.0, 4.8], [6.8, 6.15], [7.5, 6.45], ABUJA, [7.44, 10.5], [8.5, 12.0], [8.9, 9.9], [13.15, 11.8], [5.25, 13.06], [4.55, 8.5]];
+const DEMAND_REGION_RAW = [[-0.2, 5.6], [-4.0, 5.35], [1.2, 6.15], [2.4, 6.4], [-1.5, 12.37], [-8.0, 12.64], [2.1, 13.5], [-17.4, 14.7], [-13.7, 9.55], [-13.2, 8.48], [-10.8, 6.3], [-16.6, 13.45], [-15.6, 11.86]];
 
-function curve(a, b, bend = 0.18) {
+// Breathing room for the miniature models: nudge nodes apart until no two are
+// closer than MIN_GAP view-box units. Generation positions are illustrative,
+// so they give way first; offtakers sit at real cities and move only a little;
+// the Lagos and Abuja offices never move. Nigerian nodes stay inside Nigeria,
+// regional ones inside the WAPP region outside it. Deterministic, so lines and
+// models are built from the same spread positions and stay connected.
+const MIN_GAP = 62;
+const inNigeria = (p) => inside(p, NIGERIA);
+const inWapp = (p) => inside(p, REGION) && !inside(p, NIGERIA);
+function spreadOut(sets) {
+  const pts = sets.flatMap((set, si) =>
+    set.points.map((p) => ({ p: [...p], o: p, si, give: p === ABUJA ? 0 : set.give, reach: set.reach, ok: set.ok })),
+  );
+  // Fixed points to keep clear: the offices, plus the hub's "Supply" / "Demand"
+  // labels (drawn ±128 units either side of the hub, 36 above it).
+  const unP = ([x, y]) => [x / K + LON0, LAT0 - y / K];
+  const [hx, hy] = P(HUB);
+  const anchors = [HUB, ABUJA, unP([hx - 160, hy - 42]), unP([hx + 160, hy - 42])];
+  const gap = MIN_GAP / K; // in degrees
+  for (let iter = 0; iter < 120; iter++) {
+    pts.forEach((a, ai) => {
+      if (!a.give) return;
+      let fx = 0, fy = 0;
+      for (const b of [...pts.map((q) => q.p), ...anchors]) {
+        if (b === a.p) continue;
+        let dx = a.p[0] - b[0], dy = a.p[1] - b[1];
+        // Exactly coincident points (a city that both generates and consumes)
+        // get a fixed per-node direction so they still separate.
+        if (Math.hypot(dx, dy) < 1e-6) { dx = Math.cos(ai * 2.4) * 1e-3; dy = Math.sin(ai * 2.4) * 1e-3; }
+        const d = Math.hypot(dx, dy);
+        if (d < gap) { fx += (dx / d) * (gap - d); fy += (dy / d) * (gap - d); }
+      }
+      const next = [a.p[0] + fx * 0.25 * a.give, a.p[1] + fy * 0.25 * a.give];
+      const ox = next[0] - a.o[0], oy = next[1] - a.o[1], off = Math.hypot(ox, oy);
+      if (off > a.reach) { next[0] = a.o[0] + (ox / off) * a.reach; next[1] = a.o[1] + (oy / off) * a.reach; }
+      if (a.ok(next)) a.p = next;
+    });
+  }
+  const round = ({ p, o }) => (o === ABUJA ? ABUJA : p.map((v) => +v.toFixed(2)));
+  return sets.map((_, si) => pts.filter((q) => q.si === si).map(round));
+}
+const [GEN_NG, DEMAND_NG, GEN_REGION, DEMAND_REGION] = spreadOut([
+  { points: GEN_RAW, give: 1, reach: 1.4, ok: inNigeria },
+  { points: DEMAND_RAW, give: 0.3, reach: 0.45, ok: inNigeria },
+  { points: GEN_REGION_RAW, give: 1, reach: 1.4, ok: inWapp },
+  { points: DEMAND_REGION_RAW, give: 0.3, reach: 0.5, ok: inWapp },
+]);
+
+// Quadratic curve between two places: [x1, y1, qx, qy, x2, y2], rounded the
+// same way the path string is so points derived from it sit on the line.
+function quad(a, b, bend) {
   const [x1, y1] = P(a), [x2, y2] = P(b);
   const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
   const dx = x2 - x1, dy = y2 - y1;
-  return `M${x1.toFixed(0)} ${y1.toFixed(0)}Q${(mx - dy * bend).toFixed(0)} ${(my + dx * bend).toFixed(0)} ${x2.toFixed(0)} ${y2.toFixed(0)}`;
+  return [x1, y1, mx - dy * bend, my + dx * bend, x2, y2].map((v) => +v.toFixed(0));
+}
+
+function curve(a, b, bend = 0.18) {
+  const [x1, y1, qx, qy, x2, y2] = quad(a, b, bend);
+  return `M${x1} ${y1}Q${qx} ${qy} ${x2} ${y2}`;
 }
 
 // Grid mesh: each node joins its two nearest neighbours.
-function buildMesh(points) {
+const MESH_BEND = 0.06;
+function meshEdges(points) {
   const edges = new Set();
   const out = [];
   points.forEach((p, i) => {
@@ -126,12 +182,97 @@ function buildMesh(points) {
         const key = i < j ? `${i}-${j}` : `${j}-${i}`;
         if (!edges.has(key)) {
           edges.add(key);
-          out.push(curve(p, points[j], 0.06));
+          out.push([i, j]);
         }
       });
   });
   return out;
 }
+const MESH_POINTS = [HUB, ...GEN_NG, ...GEN_REGION, ...DEMAND_NG, ...DEMAND_REGION];
+const MESH_EDGES = meshEdges(MESH_POINTS);
+const buildMesh = () => MESH_EDGES.map(([i, j]) => curve(MESH_POINTS[i], MESH_POINTS[j], MESH_BEND));
+
+// ── Miniature infrastructure (Blender models, see EcoModels.jsx) ─────────
+// Each node keeps its meaning: generation → power station, offtakers →
+// substation (where power is delivered), in Nigeria and across the WAPP
+// region alike. 330kV towers stand on Nigeria's supply lines, carrying
+// generation towards the market; across the region, towers stand on the long
+// grid links as interconnectors (no voltage claimed — these links are
+// conceptual). Models are dropped where they would crowd another model or the
+// Onction hub.
+const IN_BEND = (i) => (i % 2 ? 0.2 : -0.2);
+const MODEL_LABEL = {
+  gen: "Power station", demand: "Transmission substation", tower: "330kV transmission line",
+  wgen: "Power station", wdemand: "Transmission substation", wtower: "WAPP interconnector",
+};
+const REGIONAL_SIZE = 0.85; // a step down from Nigeria, the home market in focus
+const HIT = { station: [5, 19], substation: [5, 19], tower: [18, 21] }; // [lift, radius] around the model
+
+function buildInstances() {
+  const [hx, hy] = P(HUB);
+  const [ax, ay] = P(ABUJA);
+  const nearHub = (x, y, r) => Math.hypot(x - hx, y - hy) < r;
+  const sinT = Math.sin(0.45); // EcoModels' TILT: foreshortens the ground plane
+  const out = [];
+  const add = (m) => {
+    const size = m.size ?? 1;
+    out.push({ ...m, hit: HIT[m.kind].map((v) => v * size) });
+  };
+  // A tower on curve (x1,y1)→(x2,y2): first clear spot among `ts`, turned so its
+  // conductors follow the line on screen. Keeps clear of other models and of
+  // the hub's glow and the Abuja dot + label (both sit above it and would take
+  // its hover).
+  const towerOn = ([x1, y1, qx, qy, x2, y2], ts, gap) => {
+    const at = (t) => [(1 - t) ** 2 * x1 + 2 * (1 - t) * t * qx + t * t * x2, (1 - t) ** 2 * y1 + 2 * (1 - t) * t * qy + t * t * y2, t];
+    const spot = ts.map(at).find(([x, y]) => !nearHub(x, y, 125) && Math.hypot(x - (ax + 30), y - ay) > 55 && !out.some((o) => Math.hypot(o.x - x, o.y - y) < gap));
+    if (!spot) return null;
+    const [x, y, t] = spot, u = 1 - t;
+    const tx = 2 * u * (qx - x1) + 2 * t * (x2 - qx), ty = 2 * u * (qy - y1) + 2 * t * (y2 - qy);
+    return { x, y, t, yaw: Math.atan2(tx, ty / sinT) };
+  };
+
+  GEN_NG.forEach((p, i) => {
+    const [x, y] = P(p);
+    if (nearHub(x, y, 60)) return; // inside the market ring: keeps its original glyph
+    add({ id: `gen:${i}`, group: "node:gen", kind: "station", x, y, delay: 900 + i * 45 });
+  });
+  DEMAND_NG.forEach((p, i) => {
+    const [x, y] = P(p);
+    // Points inside the market ring or under the Abuja office keep their
+    // original glyph: the hub and office stay the focal points there.
+    if (nearHub(x, y, 60) || p === ABUJA) return;
+    add({ id: `demand:${i}`, group: "node:demand", kind: "substation", x, y, delay: 3100 + i * 35 });
+  });
+  // Regional nodes share one entrance sequence (same --d as their SVG dots).
+  [...GEN_REGION, ...DEMAND_REGION].forEach((p, i) => {
+    const [x, y] = P(p);
+    if (nearHub(x, y, 60)) return;
+    const gen = i < GEN_REGION.length;
+    const id = gen ? `wgen:${i}` : `wdemand:${i - GEN_REGION.length}`;
+    add({ id, group: "node:wapp", kind: gen ? "station" : "substation", x, y, size: REGIONAL_SIZE, delay: 900 + i * 30 });
+  });
+
+  GEN_NG.forEach((g, i) => {
+    const c = towerOn(quad(g, HUB, IN_BEND(i)), [0.45, 0.38, 0.55, 0.3, 0.62], 55);
+    // The tower rises as the line's 1.8s stroke draws past it.
+    if (c) add({ id: `tower:${i}`, group: "node:tower", kind: "tower", x: c.x, y: c.y, yaw: c.yaw, delay: 2100 + i * 45 + Math.round(1800 * c.t) });
+  });
+  // Regional interconnectors: long mesh spans that touch the region outside Nigeria.
+  const firstRegional = 1 + GEN_NG.length, afterGenRegion = firstRegional + GEN_REGION.length;
+  const regional = (k) => (k >= firstRegional && k < afterGenRegion) || k >= afterGenRegion + DEMAND_NG.length;
+  MESH_EDGES.forEach(([i, j], e) => {
+    if (!regional(i) && !regional(j)) return;
+    const q = quad(MESH_POINTS[i], MESH_POINTS[j], MESH_BEND);
+    if (Math.hypot(q[4] - q[0], q[5] - q[1]) < 120) return;
+    const c = towerOn(q, [0.5, 0.42, 0.58], 70);
+    if (c) add({ id: `wtower:${e}`, group: "node:wapp", kind: "tower", x: c.x, y: c.y, yaw: c.yaw, size: REGIONAL_SIZE, delay: 1300 + (e % 12) * 40 + Math.round(1800 * c.t) });
+  });
+  return out;
+}
+const INSTANCES = buildInstances();
+const MODELED = new Set(INSTANCES.map((m) => m.id));
+
+const EcoModels = lazy(() => import("./EcoModels.jsx"));
 
 const STEPS = [
   { title: "Generation", body: "Gas-fired plants and solar, wind and hydro projects produce power." },
@@ -149,6 +290,7 @@ const NODE_INFO = {
   abuja: { eyebrow: "Onction", title: "Abuja office", body: "Our second trading hub, in the Federal Capital Territory.", link: ["Our offices", "/contact#offices"] },
   gen: { eyebrow: "Generation", title: "Power producers", body: "Gas-fired plants and solar, wind and hydro projects that need a dependable route to market. Positions shown are illustrative.", link: ["How we trade", "/how-we-trade"] },
   demand: { eyebrow: "Offtakers", title: "Utilities & large consumers", body: "Distribution companies and commercial and industrial users that receive power under structured supply contracts. Positions are illustrative.", link: ["Power purchase & sale", "/solutions#power-purchase-and-sale"] },
+  tower: { eyebrow: "Transmission", title: "330kV transmission line", body: "The high-voltage grid that carries power from generators across the country towards the market. Positions shown are illustrative.", link: ["Our market", "/market"] },
   wapp: { eyebrow: "Regional market", title: "West African Power Pool", body: "Neighbouring markets across the WAPP region, where Onction participates in cross-border trading.", link: ["Our market", "/market"] },
 };
 
@@ -208,6 +350,21 @@ export default function EcosystemStory() {
   const [hovered, setHovered] = useState(null);
   const [pinned, setPinned] = useState(null);
   const active = hovered || pinned;
+  // Miniature models: which one the pointer is on, and whether they've loaded
+  // (until then — or if WebGL is unavailable — the original dots stay).
+  const [hoveredModel, setHoveredModel] = useState(null);
+  const [modelsReady, setModelsReady] = useState(false);
+  const [wantModels, setWantModels] = useState(false);
+  const modelHover = (id) => ({ onMouseEnter: () => setHoveredModel(id), onMouseLeave: () => setHoveredModel(null) });
+  // A model's own hit area: names the model and drives the explore card for its kind.
+  const modelExplore = (m) => {
+    const kind = explore(m.group), own = modelHover(m.id);
+    return {
+      ...kind,
+      onMouseEnter: () => { kind.onMouseEnter(); own.onMouseEnter(); },
+      onMouseLeave: () => { kind.onMouseLeave(); own.onMouseLeave(); },
+    };
+  };
   const activeZone = active?.startsWith("zone:") ? active.slice(5) : null;
   const explore = (id) => ({
     onMouseEnter: () => setHovered(id),
@@ -226,8 +383,8 @@ export default function EcosystemStory() {
   });
 
   const dots = useMemo(buildDots, []);
-  const mesh = useMemo(() => buildMesh([HUB, ...GEN_NG, ...GEN_REGION, ...DEMAND_NG, ...DEMAND_REGION]), []);
-  const inFlows = useMemo(() => GEN_NG.map((g, i) => curve(g, HUB, i % 2 ? 0.2 : -0.2)), []);
+  const mesh = useMemo(buildMesh, []);
+  const inFlows = useMemo(() => GEN_NG.map((g, i) => curve(g, HUB, IN_BEND(i))), []);
   const outFlows = useMemo(() => DEMAND_NG.map((d, i) => curve(HUB, d, i % 2 ? -0.16 : 0.16)), []);
   const [hx, hy] = P(HUB);
   const [ax, ay] = P(ABUJA);
@@ -245,7 +402,10 @@ export default function EcosystemStory() {
   useEffect(() => {
     const el = netRef.current?.closest("section");
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => setLive(e.isIntersecting), { threshold: 0.05 });
+    const io = new IntersectionObserver(([e]) => {
+      setLive(e.isIntersecting);
+      if (e.isIntersecting) setWantModels(true); // fetch three.js + the GLB once the section approaches
+    }, { threshold: 0.05 });
     io.observe(el);
     return () => io.disconnect();
   }, []);
@@ -290,7 +450,7 @@ export default function EcosystemStory() {
       </div>
 
       {/* ── The living composition ── */}
-      <div ref={ref} className={`relative mt-10 ${inView ? "is-in" : ""}`}>
+      <div ref={ref} className={`relative mt-10 ${inView ? "is-in" : ""} ${modelsReady ? "eco-modeled" : ""}`}>
         <div className="relative mx-auto aspect-[4/3] w-full max-w-[1600px] md:aspect-[1600/740]">
           {/* Layer 1: halftone map */}
           <Parallax speed={0.03} className="absolute inset-0">
@@ -330,6 +490,23 @@ export default function EcosystemStory() {
 
           {/* Layer 2: network, flows, nodes */}
           <Parallax speed={0.06} className="absolute inset-0">
+            {/* Layer 2a: miniature infrastructure, beneath the lines so they run into each model */}
+            {wantModels && (
+              <Suspense fallback={null}>
+                <EcoModels
+                  instances={INSTANCES}
+                  view={view}
+                  mode={mode}
+                  scale={view === MOBILE_VIEW ? 1.2 : 1}
+                  inView={inView}
+                  reduced={reduced}
+                  live={live}
+                  hovered={hoveredModel}
+                  activeKind={active?.startsWith("node:") ? active : null}
+                  onReady={() => setModelsReady(true)}
+                />
+              </Suspense>
+            )}
             <svg {...svgProps} ref={netRef}>
               <defs>
                 <radialGradient id="ecoHubGlow">
@@ -391,8 +568,9 @@ export default function EcosystemStory() {
                 {[...GEN_REGION, ...DEMAND_REGION].map((p, i) => {
                   const [x, y] = P(p);
                   const dist = Math.hypot(x - hx, y - hy);
+                  const id = i < GEN_REGION.length ? `wgen:${i}` : `wdemand:${i - GEN_REGION.length}`;
                   return (
-                    <g key={i}>
+                    <g key={i} className={MODELED.has(id) ? "eco-has-model" : ""}>
                       <circle cx={x} cy={y} r="14" fill="transparent" />
                       <circle cx={x} cy={y} r="4" className="eco-rnode" style={{ "--d": `${900 + i * 30}ms`, animationDelay: `${4.6 + dist / 260}s` }} />
                     </g>
@@ -405,7 +583,7 @@ export default function EcosystemStory() {
                 {GEN_NG.map((p, i) => {
                   const [x, y] = P(p);
                   return (
-                    <g key={i} className="eco-node" style={{ "--d": `${900 + i * 45}ms` }}>
+                    <g key={i} className={`eco-node ${MODELED.has(`gen:${i}`) ? "eco-has-model" : ""}`} style={{ "--d": `${900 + i * 45}ms` }}>
                       <circle cx={x} cy={y} r="16" fill="transparent" />
                       <circle cx={x} cy={y} r="9" className="eco-gen-ring" />
                       <circle cx={x} cy={y} r="3.5" className="eco-gen-core" />
@@ -419,7 +597,7 @@ export default function EcosystemStory() {
                 {DEMAND_NG.map((p, i) => {
                   const [x, y] = P(p);
                   return (
-                    <g key={i}>
+                    <g key={i} className={MODELED.has(`demand:${i}`) ? "eco-has-model" : ""}>
                       <circle cx={x} cy={y} r="15" fill="transparent" />
                       <rect x={x - 4.5} y={y - 4.5} width="9" height="9" className="eco-node eco-demand-node" style={{ "--d": `${3100 + i * 35}ms` }} />
                     </g>
@@ -449,6 +627,18 @@ export default function EcosystemStory() {
                 </g>
               )}
 
+              {/* name of the hovered model, in the map's own label style */}
+              {modelsReady && hoveredModel && (() => {
+                const m = INSTANCES.find((x) => x.id === hoveredModel);
+                if (!m) return null;
+                const s = view === MOBILE_VIEW ? 1.2 : 1;
+                return (
+                  <text x={m.x} y={m.y - (m.kind === "tower" ? 50 : 26) * (m.size ?? 1) * s} textAnchor="middle" className="eco-small-label eco-model-label">
+                    {MODEL_LABEL[m.id.split(":")[0]]}
+                  </text>
+                );
+              })()}
+
               {/* Abuja office */}
               <g className="eco-office eco-clickable" role="button" tabIndex={0} aria-label="Abuja office" {...explore("node:abuja")}>
                 <circle cx={ax} cy={ay} r="18" fill="transparent" />
@@ -468,6 +658,22 @@ export default function EcosystemStory() {
                 <text x={hx} y={hy + 100} textAnchor="middle" className="eco-hub-label">ONCTION</text>
                 <text x={hx} y={hy + 122} textAnchor="middle" className="eco-small-label">Lagos · head office</text>
               </g>
+
+              {/* Model hit areas, last so the hub glow and office don't swallow
+                  hovers on nearby models. Pointer only: keyboard focus stays on
+                  the kind groups above; towers get their own focusable group. */}
+              {modelsReady && (
+                <g className="eco-model-hits">
+                  {INSTANCES.filter((m) => m.group !== "node:tower").map((m) => (
+                    <circle key={m.id} cx={m.x} cy={m.y - m.hit[0]} r={m.hit[1]} fill="transparent" className="eco-hit" data-model={m.id} data-x={m.x} data-y={m.y} {...modelExplore(m)} />
+                  ))}
+                  <g className="eco-towers eco-clickable" role="button" tabIndex={0} aria-label="330kV transmission line" {...explore("node:tower")}>
+                    {INSTANCES.filter((m) => m.group === "node:tower").map((m) => (
+                      <circle key={m.id} cx={m.x} cy={m.y - m.hit[0]} r={m.hit[1]} fill="transparent" data-model={m.id} data-x={m.x} data-y={m.y} {...modelHover(m.id)} />
+                    ))}
+                  </g>
+                </g>
+              )}
             </svg>
           </Parallax>
 
