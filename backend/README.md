@@ -110,3 +110,11 @@ are unaffected by roles.
 
 Data is stored in `onction.db` (SQLite) by default, created automatically on
 first run. Point `DATABASE_URL` at Postgres for production.
+
+## Tests
+
+```bash
+cd backend
+pip install pytest httpx
+python -m pytest tests -q      # uses a throwaway SQLite database
+```

@@ -203,9 +203,9 @@ containers are "Up".
     **Vendors** in the admin dashboard, with an admin alert email sent (if
     SMTP is configured).
 13. Go to `https://vendors.onctionenergy.com/login`, log in with the vendor
-    code from step 11 (no password needed yet), set a password from
-    **Profile**, log out, log back in *with* the password to confirm it's
-    enforced.
+    code and password from step 11. Confirm a wrong password is refused, and
+    that the code alone never signs in. (Vendors added from the admin side have
+    no password until they use **Forgot password**, which needs SMTP.)
 14. From the admin side, approve that vendor. Back in the vendor portal,
     confirm the dashboard reflects **Approved** status and invoices can now
     be submitted.

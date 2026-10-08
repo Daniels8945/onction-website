@@ -27,7 +27,9 @@ async function request(path, { method = "GET", body, isForm = false } = {}) {
     body: isForm ? body : body ? JSON.stringify(body) : undefined,
   });
 
-  if (res.status === 401) {
+  // A 401 only means the session expired if we sent one; otherwise (e.g. a
+  // wrong password at sign-in) fall through and show the server's message.
+  if (res.status === 401 && token) {
     setToken(null);
     throw new SessionExpiredError("Session expired — please log in again.");
   }

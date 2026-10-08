@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 
 from ..database import get_session
 from ..models_admin import AdminCreate, AdminRead, AdminUser
-from ..security import get_current_admin, hash_password
+from ..security import get_current_admin, hash_password, require_role
 
 router = APIRouter(prefix="/api/admin/users", tags=["team"])
 
@@ -20,7 +20,7 @@ def list_admins(
 def create_admin(
     payload: AdminCreate,
     session: Session = Depends(get_session),
-    current: AdminUser = Depends(get_current_admin),
+    current: AdminUser = Depends(require_role("Super Admin")),
 ):
     existing = session.exec(select(AdminUser).where(AdminUser.email == payload.email)).first()
     if existing:
@@ -41,7 +41,7 @@ def create_admin(
 def deactivate_admin(
     admin_id: int,
     session: Session = Depends(get_session),
-    current: AdminUser = Depends(get_current_admin),
+    current: AdminUser = Depends(require_role("Super Admin")),
 ):
     """Deactivates (doesn't hard-delete, to preserve who-did-what history
     on tasks/pages/etc.) another admin. An admin can't deactivate themself —

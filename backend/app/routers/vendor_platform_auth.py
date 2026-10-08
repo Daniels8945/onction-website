@@ -9,10 +9,10 @@ from ..database import get_session
 from ..email import render_shell, try_send_email
 from ..models_vendors import (
     Vendor,
-    VendorCreate,
     VendorForgotPassword,
     VendorLogin,
     VendorRead,
+    VendorRegister,
     VendorResetPassword,
     VendorSetPassword,
     VendorTokenResponse,
@@ -31,7 +31,7 @@ def _to_read(vendor: Vendor) -> VendorRead:
 
 @router.post("/register", response_model=VendorRead, status_code=201)
 def register_vendor(
-    payload: VendorCreate,
+    payload: VendorRegister,
     background_tasks: BackgroundTasks,
     session: Session = Depends(get_session),
 ):
@@ -44,7 +44,8 @@ def register_vendor(
 
     settings_row = get_platform_settings(session)
     vendor = Vendor(
-        **payload.model_dump(),
+        **payload.model_dump(exclude={"password"}),
+        password_hash=hash_password(payload.password),
         vendor_code=generate_vendor_code(session, settings_row),
         self_registered=True,
     )
@@ -77,15 +78,20 @@ def login_vendor(payload: VendorLogin, session: Session = Depends(get_session)):
     vendor = session.exec(select(Vendor).where(Vendor.vendor_code == payload.vendor_code)).first()
     if vendor is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect vendor code or password")
+    # The code alone is not a credential (it's emailed and printed): a password is
+    # always required, and checked before anything about the account is revealed.
+    if not vendor.password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No password has been set for this account yet. Use “Forgot password” to set one.",
+        )
+    if not verify_password(payload.password, vendor.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect vendor code or password")
 
     if vendor.status == "Rejected":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=vendor.rejection_reason or "Your registration was rejected")
     if vendor.status == "Inactive":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Your account is inactive — please contact support")
-
-    if vendor.password_hash:
-        if not payload.password or not verify_password(payload.password, vendor.password_hash):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect vendor code or password")
 
     token = create_access_token(subject=vendor.vendor_code, scope="vendor")
     return VendorTokenResponse(access_token=token, vendor=_to_read(vendor))

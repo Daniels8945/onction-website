@@ -7,6 +7,7 @@ const EMPTY = {
   company_name: "", business_type: "Manufacturer", products_services: "", website: "",
   first_name: "", last_name: "", email: "", phone: "",
   street_address: "", city: "", region: "", postal_code: "", country: "",
+  password: "",
 };
 const inputClass = "w-full border border-black/10 px-3 py-2 text-sm outline-none focus:border-teal-500";
 
@@ -24,6 +25,7 @@ export default function VendorRegisterPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState(null);
+  const [confirm, setConfirm] = useState("");
   const navigate = useNavigate();
 
   function set(field, value) {
@@ -33,6 +35,10 @@ export default function VendorRegisterPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    if (form.password !== confirm) {
+      setError("Passwords don't match");
+      return;
+    }
     setSubmitting(true);
     try {
       const vendor = await vendorApi.post("/api/vendor-platform/auth/register", form);
@@ -52,7 +58,7 @@ export default function VendorRegisterPage() {
           <h1 className="mb-4 font-syne text-xl font-semibold text-ink">Save your vendor code</h1>
           <p className="mb-4 border border-black/10 bg-mist px-4 py-3 font-mono text-lg text-ink">{created.vendor_code}</p>
           <p className="mb-6 text-sm text-slatey">
-            You'll need this code to log in. Your account is <strong>Pending Review</strong> — you'll be able to submit
+            Sign in with this code and the password you just chose. Your account is <strong>Pending Review</strong> — you'll be able to submit
             invoices once an admin approves it.
           </p>
           <button onClick={() => navigate("/login")} className="btn-primary w-full">Go to sign in</button>
@@ -87,6 +93,12 @@ export default function VendorRegisterPage() {
             <Field label="Last name"><input value={form.last_name} onChange={(e) => set("last_name", e.target.value)} className={inputClass} /></Field>
             <Field label="Email *"><input required type="email" value={form.email} onChange={(e) => set("email", e.target.value)} className={inputClass} /></Field>
             <Field label="Phone"><input value={form.phone} onChange={(e) => set("phone", e.target.value)} className={inputClass} /></Field>
+          </div>
+
+          <p className="eyebrow pt-2">Sign-in</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Password * (at least 8 characters)"><input required type="password" minLength={8} autoComplete="new-password" value={form.password} onChange={(e) => set("password", e.target.value)} className={inputClass} /></Field>
+            <Field label="Confirm password *"><input required type="password" minLength={8} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} /></Field>
           </div>
 
           <p className="eyebrow pt-2">Address</p>

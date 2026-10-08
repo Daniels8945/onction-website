@@ -54,7 +54,7 @@ export default function VendorLoginPage() {
               id="password"
               type="password"
               autoComplete="current-password"
-              placeholder="Leave blank if you haven't set one yet"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full border border-white/20 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-teal-400"

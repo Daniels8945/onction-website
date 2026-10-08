@@ -59,6 +59,14 @@ class VendorCreate(SQLModel):
     phone: Optional[str] = Field(default=None, max_length=40)
 
 
+class VendorRegister(VendorCreate):
+    """Public self-registration: same fields as an admin-created vendor, plus the
+    password the vendor will sign in with (the vendor code alone is not a secret —
+    it's emailed and printed on paperwork)."""
+
+    password: str = Field(min_length=8, max_length=200)
+
+
 class VendorUpdate(SQLModel):
     company_name: Optional[str] = None
     business_type: Optional[str] = None
@@ -109,7 +117,7 @@ class VendorRead(SQLModel):
 
 class VendorLogin(SQLModel):
     vendor_code: str
-    password: Optional[str] = None
+    password: str = Field(min_length=1, max_length=200)
 
 
 class VendorSetPassword(SQLModel):

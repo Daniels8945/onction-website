@@ -15,43 +15,48 @@ token `scope` claim, vendors are correctly confined to their own invoices and
 documents, password-reset endpoints don't leak which emails exist, Postgres is
 never exposed outside Docker, and Caddy provides automatic HTTPS.
 
-**It should not go live as-is.** Three issues let an outsider or a low-privilege
-user take over accounts. All three are small code changes.
+Three critical issues let an outsider or a low-privilege user take over
+accounts. **All three are now fixed** (C1–C3 below) and covered by
+`backend/tests/test_security_fixes.py`, which fails 12 of 14 checks against the
+old code and passes all 14 against the fix. The High findings remain open.
 
 | Severity | Count | Meaning |
 |---|---|---|
-| 🔴 Critical | 3 | Account takeover or full compromise; fix before launch |
+| 🔴 Critical | 3 | Account takeover or full compromise. **Fixed** |
 | 🟠 High | 4 | Serious abuse or data exposure; fix before or right after launch |
 | 🟡 Medium | 6 | Real weaknesses with narrower impact |
 | ⚪ Low / hygiene | 7 | Worth doing; not urgent |
 
 ---
 
-## 🔴 Critical — fix before launch
+## 🔴 Critical — ✅ fixed
 
-### C1. A blank `JWT_SECRET` is silently accepted
+### C1. A blank `JWT_SECRET` is silently accepted — ✅ fixed
 `docker-compose.yml:25` passes `JWT_SECRET: ${JWT_SECRET}` through. If `.env`
 leaves it empty (as `.env.example` ships), the backend runs with an **empty
 signing key** (`backend/app/config.py:22`), so anyone can forge an admin token
 and use the whole dashboard. The same pattern applies to `ADMIN_PASSWORD`
 (`docker-compose.yml:27`).
-**Fix:** refuse to start when `JWT_SECRET` is shorter than 32 characters or still
-the dev default; use `${JWT_SECRET:?set JWT_SECRET in .env}` in compose.
+**Fixed:** the backend refuses to start with an empty secret, or (outside local
+SQLite dev) a default or sub-32-character one; compose refuses a blank
+`JWT_SECRET` or `POSTGRES_PASSWORD`; the seed refuses a default or
+sub-12-character first-admin password.
 
-### C2. Vendor accounts open with the vendor code alone
+### C2. Vendor accounts open with the vendor code alone — ✅ fixed
 `backend/app/routers/vendor_platform_auth.py:86` only checks a password **if one
 has been set**. Every newly registered vendor has none, so knowing the code
 (`OSL-2026-ABC-1234`, which is emailed, printed on paperwork and shown on screen)
 is enough to sign in, read the account, submit invoices and upload documents.
-**Fix:** require a password at registration (or send a one-time set-password
-link), and never issue a token without one.
+**Fixed:** self-registration requires a password; login always requires one and
+checks it before revealing account status. Vendors without a password (added by
+an admin, or legacy) are told to use **Forgot password**, which needs SMTP.
 
-### C3. Any dashboard user, including a read-only **Viewer**, can create a Super Admin
+### C3. Any dashboard user, including a read-only **Viewer**, can create a Super Admin — ✅ fixed
 `backend/app/routers/admin_users.py:20` (create) and `:41` (deactivate) only
 require *a* logged-in admin. A Viewer can create a Super Admin for themselves, or
 deactivate every other admin.
-**Fix:** gate both with `require_role("Super Admin")`, and block creating a role
-higher than your own.
+**Fixed:** creating and deactivating users requires Super Admin; roles are
+limited to `Super Admin`, `Admin`, `Viewer`.
 
 ## 🟠 High
 
@@ -102,7 +107,8 @@ on save and in the renderer); restrict video embeds to known hosts.
 - **Event capacity race:** count-then-insert (`events.py:71`) can overbook under concurrent registrations. Lock the row or use a constraint.
 - **SVG uploads are allowed** (`storage.py:12`). They're served from the bucket's own domain, which limits the impact, but rasterise or drop them.
 - **No migrations framework:** schema changes are hand-written `ALTER TABLE`s in `database.py:24`, and `init_db()` runs twice (`main.py:34,48`). Adopt Alembic before the schema grows further.
-- **No backend tests and no CI.** The only automated tests are the Playwright suite for the ecosystem map (`frontend/tests/`).
+- **Thin test coverage and no CI.** Backend tests cover only the C1–C3 fixes (`backend/tests/`); the frontend has the ecosystem-map Playwright suite (`frontend/tests/`).
+- **Form labels aren't linked to inputs** on the vendor registration form (and likely other forms using the same `Field` wrapper), which hurts screen-reader users.
 - **Build artifact committed:** `frontend/dist.zip` (1.9 MB) is tracked in git.
 - **Docs drift:** the README still describes SQLite as the backend database; production uses Postgres. The backend has no container healthcheck.
 
@@ -122,7 +128,7 @@ on save and in the renderer); restrict video embeds to known hosts.
 
 ## Recommended order
 
-1. **Before launch:** C1, C2, C3 (each a few lines), plus H4's URL allow-list.
+1. **Before launch:** ~~C1, C2, C3~~ (done), plus H4's URL allow-list.
 2. **Launch week:** H1 rate limits, M4 security headers, M6 backups, H3 dependency bumps.
 3. **Next:** H2 private documents, M2 analytics accuracy, M5 email escaping, M1 streaming uploads.
 4. **Ongoing:** M3 cookie sessions, Alembic migrations, backend tests and CI.

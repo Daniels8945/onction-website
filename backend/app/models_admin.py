@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import EmailStr
 from sqlmodel import SQLModel, Field
@@ -41,7 +41,7 @@ class AdminCreate(SQLModel):
     email: EmailStr
     full_name: Optional[str] = Field(default=None, max_length=120)
     password: str = Field(min_length=8, max_length=200)
-    role: str = Field(default="Admin")
+    role: Literal["Super Admin", "Admin", "Viewer"] = "Admin"
 
 
 class TokenResponse(SQLModel):
