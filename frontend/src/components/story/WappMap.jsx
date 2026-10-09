@@ -86,7 +86,7 @@ export default function WappMap() {
                 tabIndex={0}
                 aria-label={`${c.name}${c.home ? ", Onction's home market" : ""}`}
                 aria-pressed={on}
-                onMouseEnter={() => { setFocus(c.id); setCorridor(null); }}
+                onPointerEnter={(e) => e.pointerType === "mouse" && (setFocus(c.id), setCorridor(null))}
                 onFocus={() => { setFocus(c.id); setCorridor(null); }}
                 onClick={() => setFocus(c.id)}
                 className="map-node cursor-pointer outline-none"
@@ -136,11 +136,14 @@ export default function WappMap() {
                 key={c.key}
                 type="button"
                 aria-pressed={corridor === c.key}
-                onMouseEnter={() => setCorridor(c.key)}
-                onMouseLeave={() => setCorridor(null)}
-                onFocus={() => setCorridor(c.key)}
+                // Hover and keyboard focus preview; a tap toggles. A tap also
+                // focuses the button (Android) and fires a mouseenter, which
+                // used to preview it a moment before the click toggled it off.
+                onPointerEnter={(e) => e.pointerType === "mouse" && setCorridor(c.key)}
+                onPointerLeave={(e) => e.pointerType === "mouse" && setCorridor(null)}
+                onFocus={(e) => e.target.matches(":focus-visible") && setCorridor(c.key)}
                 onBlur={() => setCorridor(null)}
-                onClick={() => setCorridor(corridor === c.key ? null : c.key)}
+                onClick={() => setCorridor((cur) => (cur === c.key ? null : c.key))}
                 title={c.note}
                 className={`border px-3 py-1.5 text-xs transition-colors duration-400 ${corridor === c.key ? "border-teal-400 bg-teal-500 text-navy-950" : "border-white/20 text-white/75 hover:border-teal-400"}`}
               >

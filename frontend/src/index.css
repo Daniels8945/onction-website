@@ -200,6 +200,12 @@
 .rv-scale { opacity: 0; transform: scale(0.96); }
 .rv.is-in { opacity: 1; transform: none; }
 
+/* Carousel slide change: the same rise as .rv-up, but played on mount rather
+   than gated on IntersectionObserver — a slide that auto-advances while
+   scrolled off-screen must not come back invisible. */
+@keyframes rvSwap { from { opacity: 0; transform: translate3d(0, 28px, 0); } }
+.rv-swap { animation: rvSwap 900ms var(--ease-out) var(--d, 0ms) both; }
+
 /* Word-mask headline reveal (SplitText) */
 .sw {
   display: inline-block;
@@ -237,6 +243,12 @@
 .flow {
   stroke-dasharray: 0.02 0.06;
   animation: flow 6s linear infinite;
+}
+
+/* Touch screens have no hover: the "Next page" image (PageEnd) settles in
+   as the block scrolls into view instead of on pointer-over. */
+@media (hover: none) {
+  .rv.is-in .next-peek { opacity: 0.25; transform: scale(1); }
 }
 
 /* Arrow nudge on hover — Tata's signature link affordance */

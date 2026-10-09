@@ -40,16 +40,20 @@ export default function CaseStudies() {
         {/* Desktop: 3-up sliding window */}
         <div className="mt-12 hidden gap-5 lg:grid lg:grid-cols-3">
           {visible.map((idx, slot) => (
-            <Reveal key={`${index}-${slot}`} delay={slot * 80}>
-              <CaseCard study={caseStudies[idx]} />
+            <Reveal key={slot} delay={slot * 80}>
+              <div key={index} className="rv-swap h-full" style={{ "--d": `${slot * 80}ms` }}>
+                <CaseCard study={caseStudies[idx]} />
+              </div>
             </Reveal>
           ))}
         </div>
 
         {/* Mobile: single card */}
         <div className="mt-10 lg:hidden">
-          <Reveal key={index}>
-            <CaseCard study={caseStudies[index]} />
+          <Reveal>
+            <div key={index} className="rv-swap">
+              <CaseCard study={caseStudies[index]} />
+            </div>
           </Reveal>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import InnerHero from "../components/page/InnerHero.jsx";
 import SectionTitle from "../components/page/SectionTitle.jsx";
@@ -5,6 +6,7 @@ import PageEnd from "../components/page/PageEnd.jsx";
 import Reveal from "../components/Reveal.jsx";
 import EnergyLandscape from "../components/story/EnergyLandscape.jsx";
 import { useScrollProgress } from "../motion/useScrollProgress.js";
+import { useInView } from "../motion/useInView.js";
 import { useReducedMotion } from "../motion/motionPreference.js";
 import { usePageMeta } from "../hooks/usePageMeta.js";
 import { capability, highlights } from "../data/content.js";
@@ -52,7 +54,7 @@ function PinnedStory() {
   const [ref, step] = useScrollProgress({ steps: STEPS.length });
   return (
     <section ref={ref} className="relative hidden bg-navy-950 text-white lg:block" style={{ height: `${STEPS.length * 90 + 60}vh` }} aria-label="The journey of a megawatt">
-      <div className="sticky top-0 flex h-screen flex-col overflow-hidden">
+      <div className="sticky top-0 flex h-screen h-svh flex-col overflow-hidden">
         <div className="pointer-events-none absolute inset-0 opacity-[0.08]" aria-hidden="true"
           style={{ backgroundImage: "linear-gradient(to right,rgba(255,255,255,.2) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.12) 1px,transparent 1px)", backgroundSize: "64px 64px" }} />
         <div className="wrap relative grid flex-1 grid-cols-[minmax(320px,400px)_1fr] items-center gap-10 pt-24">
@@ -100,14 +102,56 @@ function PinnedStory() {
   );
 }
 
+// Phones and tablets get the pinned scene's story without the pinning: once
+// the landscape scrolls into view it draws stage by stage on its own (the same
+// --p the desktop scroll drives), panning along with the power until the
+// visitor takes over the swipe. Reduced motion shows the finished drawing.
+const PLAY_MS = 6000;
+
+function usePlayedStory(enabled) {
+  const [ref, inView] = useInView({ threshold: 0.35 });
+  const scrollerRef = useRef(null);
+  const [step, setStep] = useState(enabled ? 0 : -1);
+
+  useEffect(() => {
+    if (!enabled || !inView) return;
+    const el = ref.current, scroller = scrollerRef.current;
+    let frame = 0, panning = true;
+    const stopPan = () => (panning = false);
+    scroller.addEventListener("pointerdown", stopPan, { passive: true });
+    scroller.addEventListener("wheel", stopPan, { passive: true });
+    const start = performance.now();
+    function tick(now) {
+      const t = Math.min(1, (now - start) / PLAY_MS);
+      const p = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2; // ease in-out
+      el.style.setProperty("--p", p.toFixed(4));
+      if (panning) scroller.scrollLeft = p * (scroller.scrollWidth - scroller.clientWidth);
+      setStep(t === 1 ? -1 : Math.min(STEPS.length - 1, Math.floor(p * STEPS.length)));
+      if (t < 1) frame = requestAnimationFrame(tick);
+    }
+    frame = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(frame);
+      scroller.removeEventListener("pointerdown", stopPan);
+      scroller.removeEventListener("wheel", stopPan);
+    };
+  }, [enabled, inView, ref]);
+
+  // step -1 = finished (or never animated): every stage lit, as before.
+  // --p starts at 0 (nothing drawn) and is then driven directly on the
+  // element; the prop never changes, so re-renders don't reset it.
+  return { ref, scrollerRef, step, style: enabled ? { "--p": 0 } : undefined };
+}
+
 function StackedStory({ always = false }) {
+  const story = usePlayedStory(!always);
   return (
     <section className={`bg-navy-950 py-16 text-white ${always ? "" : "lg:hidden"}`} aria-label="The journey of a megawatt">
       <div className="wrap">
         <p className="eyebrow-light mb-6">The journey of a megawatt</p>
-        <div className="-mx-[clamp(1.25rem,3vw,4rem)] overflow-x-auto px-[clamp(1.25rem,3vw,4rem)] pb-2">
-          <div className="w-[720px] text-teal-400/80 sm:w-[900px]">
-            <EnergyLandscape showAll />
+        <div ref={story.scrollerRef} className="-mx-[clamp(1.25rem,3vw,4rem)] overflow-x-auto px-[clamp(1.25rem,3vw,4rem)] pb-2">
+          <div ref={story.ref} style={story.style} className="w-[720px] text-teal-400/80 sm:w-[900px]">
+            <EnergyLandscape activeStep={story.step} showAll={story.step === -1} />
           </div>
         </div>
         <p className="mt-2 text-xs text-white/40">Swipe to see the full picture</p>

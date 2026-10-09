@@ -47,15 +47,33 @@ function HeroLoop({ mode, dim, full }) {
   const loop = LOOPS[mode];
   const size = small ? 1 : 0;
 
+  // Play only while on screen. Two phone cases need a nudge beyond the
+  // observer: iOS Low Power Mode (and some Android data savers) refuse
+  // autoplay until the visitor first touches the page, and iOS leaves the
+  // video paused after switching apps, which never re-fires the observer.
   useEffect(() => {
     const v = ref.current;
     if (!v || typeof IntersectionObserver === "undefined") return;
+    let onScreen = false;
+    const play = () => onScreen && !document.hidden && v.play().catch(() => {});
     const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) v.play().catch(() => {});
-      else v.pause();
+      onScreen = e.isIntersecting;
+      onScreen ? play() : v.pause();
     });
     io.observe(v);
-    return () => io.disconnect();
+    const gesture = { passive: true, capture: true };
+    const onGesture = () => v.paused && play();
+    document.addEventListener("visibilitychange", play);
+    window.addEventListener("pageshow", play);
+    document.addEventListener("touchend", onGesture, gesture);
+    document.addEventListener("click", onGesture, gesture);
+    return () => {
+      io.disconnect();
+      document.removeEventListener("visibilitychange", play);
+      window.removeEventListener("pageshow", play);
+      document.removeEventListener("touchend", onGesture, gesture);
+      document.removeEventListener("click", onGesture, gesture);
+    };
   }, [still, mode]);
 
   const cls = "absolute inset-0 h-full w-full object-cover object-[48%_center] md:object-[62%_center]";
@@ -66,7 +84,9 @@ function HeroLoop({ mode, dim, full }) {
       ) : (
         // key: switching Day/Night swaps the sources cleanly
         <video key={mode} ref={ref} className={cls} poster={loop.poster} autoPlay muted loop playsInline preload="auto" disablePictureInPicture>
-          <source src={loop.webm[size]} type="video/webm" />
+          {/* codecs: iPhones without a VP9 decoder skip straight to the MP4
+              instead of downloading the WebM first and failing on it */}
+          <source src={loop.webm[size]} type='video/webm; codecs="vp9"' />
           <source src={loop.mp4[size]} type="video/mp4" />
         </video>
       )}
@@ -262,6 +282,15 @@ export default function Hero() {
           <span className="mx-1.5 cursor-pointer font-light">Home</span><span className="mx-1.5">/</span> Bulk Electricity Trading
         </a>
 
+        {/* Hero display controls — what the background shows, and day / night
+            for the 3D visuals. Top-right, level with the breadcrumb, from sm
+            up; on phones that corner overlapped the breadcrumb and headline,
+            so they sit in one row beneath the breadcrumb instead. */}
+        <div className="mt-4 flex items-center gap-2 sm:absolute sm:right-[clamp(1.25rem,3vw,4rem)] sm:top-[6.35rem] sm:mt-0">
+          <ViewToggle view={view} />
+          <SceneToggle mode={mode} />
+        </div>
+
         {/* ── Slide content — left-aligned over the full-bleed photo ── */}
         <div className="flex min-h-[58vh] items-center">
           <div key={i} className="animate-fadeUp max-w-xl">
@@ -331,13 +360,6 @@ export default function Hero() {
               <Chevron dir="right" />
             </button>
           </div>
-        </div>
-
-        {/* Hero display controls — top-right, level with the breadcrumb:
-            what the background shows, and day / night for the 3D visuals */}
-        <div className="absolute right-[clamp(1.25rem,3vw,4rem)] top-[6.35rem] flex flex-col items-end gap-2 sm:flex-row sm:items-center">
-          <ViewToggle view={view} />
-          <SceneToggle mode={mode} />
         </div>
 
         {/* Bottom-right wordmark watermark — TATA reference equivalent.

@@ -25,7 +25,7 @@ export default function PageEnd({ next }) {
           <Reveal delay={120} className="bg-navy-900">
             <Link to={next.to} className="group relative flex h-full min-h-[240px] flex-col justify-between overflow-hidden py-14 lg:py-20 lg:pl-12">
               {next.image && (
-                <img src={next.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full scale-105 object-cover opacity-0 transition duration-700 ease-out-expo group-hover:scale-100 group-hover:opacity-25" />
+                <img src={next.image} alt="" loading="lazy" className="next-peek absolute inset-0 h-full w-full scale-105 object-cover opacity-0 transition duration-700 ease-out-expo group-hover:scale-100 group-hover:opacity-25" />
               )}
               <span className="relative eyebrow-light">Next</span>
               <span className="relative mt-4 flex items-end justify-between gap-6">

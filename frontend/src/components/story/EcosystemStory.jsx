@@ -355,23 +355,36 @@ export default function EcosystemStory() {
   const [hoveredModel, setHoveredModel] = useState(null);
   const [modelsReady, setModelsReady] = useState(false);
   const [wantModels, setWantModels] = useState(false);
-  const modelHover = (id) => ({ onMouseEnter: () => setHoveredModel(id), onMouseLeave: () => setHoveredModel(null) });
+  // Hover previews come from a real mouse only. A tap also fires mouseenter
+  // and focus with no matching leave/blur, which left the preview stuck: a
+  // second tap couldn't unpin and the card's × did nothing on iPhone. Touch
+  // pins with the tap itself, and names the tapped model.
+  const touch = useRef(false);
+  const mouseOnly = (fn) => (e) => {
+    touch.current = e.pointerType !== "mouse";
+    if (!touch.current) fn();
+  };
+  const modelHover = (id) => ({ onPointerEnter: mouseOnly(() => setHoveredModel(id)), onPointerLeave: mouseOnly(() => setHoveredModel(null)) });
   // A model's own hit area: names the model and drives the explore card for its kind.
   const modelExplore = (m) => {
     const kind = explore(m.group), own = modelHover(m.id);
     return {
       ...kind,
-      onMouseEnter: () => { kind.onMouseEnter(); own.onMouseEnter(); },
-      onMouseLeave: () => { kind.onMouseLeave(); own.onMouseLeave(); },
+      onPointerEnter: (e) => { kind.onPointerEnter(e); own.onPointerEnter(e); },
+      onPointerLeave: (e) => { kind.onPointerLeave(e); own.onPointerLeave(e); },
     };
   };
   const activeZone = active?.startsWith("zone:") ? active.slice(5) : null;
   const explore = (id) => ({
-    onMouseEnter: () => setHovered(id),
-    onMouseLeave: () => setHovered(null),
-    onFocus: () => setHovered(id),
+    onPointerEnter: mouseOnly(() => setHovered(id)),
+    onPointerLeave: mouseOnly(() => setHovered(null)),
+    onPointerDown: (e) => (touch.current = e.pointerType !== "mouse"),
+    onFocus: (e) => e.target.matches(":focus-visible") && setHovered(id),
     onBlur: () => setHovered(null),
-    onClick: () => setPinned((p) => (p === id ? null : id)),
+    onClick: (e) => {
+      setPinned((p) => (p === id ? null : id));
+      if (touch.current) setHoveredModel(e.target.dataset?.model ?? null);
+    },
     onKeyDown: (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
@@ -381,6 +394,11 @@ export default function EcosystemStory() {
       }
     },
   });
+
+  const clearPinned = () => {
+    setPinned(null);
+    if (touch.current) setHoveredModel(null);
+  };
 
   const dots = useMemo(buildDots, []);
   const mesh = useMemo(buildMesh, []);
@@ -679,7 +697,7 @@ export default function EcosystemStory() {
 
           {/* Explore card — desktop overlay (phones get it below the map) */}
           <div className="absolute left-4 top-4 z-10 hidden w-[310px] md:block">
-            <ExploreCard active={active} pinned={!!pinned} onClear={() => setPinned(null)} />
+            <ExploreCard active={active} pinned={!!pinned} onClear={clearPinned} />
           </div>
 
           {/* Key */}
@@ -693,7 +711,7 @@ export default function EcosystemStory() {
         {/* Story strip — lights up in step with the entrance */}
         <div className="wrap">
           <div className="mb-2 mt-4 md:hidden">
-            <ExploreCard active={active} pinned={!!pinned} onClear={() => setPinned(null)} />
+            <ExploreCard active={active} pinned={!!pinned} onClear={clearPinned} />
           </div>
           <ol className="eco-steps flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:gap-px md:overflow-visible">
             {STEPS.map((s, i) => (

@@ -13,8 +13,10 @@ export default function About() {
         <SectionHeader heading={about.heading} />
 
         <div className="mt-12 grid gap-10 lg:grid-cols-[260px_1fr]">
-          {/* Tab rail */}
-          <Reveal>
+          {/* Tab rail. min-w-0 on both grid items: the rail scrolls sideways
+              on phones, but a grid item's default min-width:auto let it widen
+              the column to fit every tab and push the page 44px off-screen. */}
+          <Reveal className="min-w-0">
             <div
               className="flex gap-2 overflow-x-auto lg:flex-col lg:gap-1"
               role="tablist"
@@ -45,7 +47,7 @@ export default function About() {
           </Reveal>
 
           {/* Panel */}
-          <Reveal key={active}>
+          <Reveal key={active} className="min-w-0">
             <div
               role="tabpanel"
               className="rounded-none border border-black/5 bg-mist p-8 sm:p-10"

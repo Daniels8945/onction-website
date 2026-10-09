@@ -14,8 +14,8 @@ export default function Testimonials() {
       <div className="wrap py-20 sm:py-24">
         <SectionHeader eyebrow="Testimonials" heading="What our partners say" />
 
-        <Reveal key={index} className="mt-12">
-          <blockquote className="rounded-none border border-black/5 bg-mist p-8 sm:p-10 lg:p-12">
+        <Reveal className="mt-12">
+          <blockquote key={index} className="rv-swap rounded-none border border-black/5 bg-mist p-8 sm:p-10 lg:p-12">
             {/* Large decorative quote mark */}
             <svg
               className="mb-5 text-teal-500/30"
