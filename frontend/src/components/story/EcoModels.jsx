@@ -174,9 +174,14 @@ export default function EcoModels({ instances, view, mode, scale = 1, inView, re
     }
 
     // Advance entrance + hover easing; keep looping only while something moves.
-    function tick() {
+    // Both are timed by the clock, not by frames, so they run at the same speed
+    // on 60Hz, 120Hz (ProMotion) and throttled 30fps (Low Power Mode) screens.
+    function tick(now) {
       state.frame = 0;
-      const now = performance.now();
+      // Time since the previous frame; the first frame after idling counts as
+      // one 60Hz frame, and a stalled frame can't jump the hover to its end.
+      const dt = state.lastTick == null ? 1000 / 60 : Math.min(now - state.lastTick, 50);
+      state.lastTick = now;
       let moving = false;
       for (const it of state.items) {
         let e = 1;
@@ -192,7 +197,7 @@ export default function EcoModels({ instances, view, mode, scale = 1, inView, re
 
         const target = it.hoverTarget;
         if (it.hover !== target) {
-          const step = state.reduced ? 1 : 16 / HOVER_MS;
+          const step = state.reduced ? 1 : dt / HOVER_MS;
           it.hover = target > it.hover ? Math.min(target, it.hover + step) : Math.max(target, it.hover - step);
           moving = true;
         }
@@ -206,6 +211,7 @@ export default function EcoModels({ instances, view, mode, scale = 1, inView, re
       }
       render();
       if (moving && !state.disposed) state.frame = requestAnimationFrame(tick);
+      else state.lastTick = null;
     }
     function kick() {
       if (!state.frame && !state.disposed) state.frame = requestAnimationFrame(tick);
