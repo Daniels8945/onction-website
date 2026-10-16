@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import { Arrow } from "./icons.jsx";
 
 import { SOLUTION_IMAGES } from "../data/solutionImages.js";
-import { slugify } from "../data/site.js";
 
 export default function Solutions() {
   return (
@@ -17,12 +16,12 @@ export default function Solutions() {
           {solutions.items.map((item, idx) => (
             // min-w-0: without it WebKit kept the cards at their landscape
             // width after rotating a phone back to portrait (17px overflow).
-            <Reveal key={item.title} delay={(idx % 3) * 80} className="min-w-0">
-              <Link to={`/solutions#${slugify(item.title)}`} className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500">
+            <Reveal key={item.slug} delay={(idx % 3) * 80} className="min-w-0">
+              <Link to={`/solutions#${item.slug}`} className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500">
               <article className="group flex h-full flex-col overflow-hidden rounded-none border border-black/5 bg-white shadow-[0_1px_2px_rgba(10,31,60,0.04)] transition hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(10,31,60,0.10)]">
                 <div className="aspect-[4/3] overflow-hidden">
                   <img
-                    src={SOLUTION_IMAGES[idx]}
+                    src={item.image || SOLUTION_IMAGES[idx]}
                     alt=""
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   />

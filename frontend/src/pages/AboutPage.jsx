@@ -9,6 +9,7 @@ import Reveal from "../components/Reveal.jsx";
 import IconBox from "../components/IconBox.jsx";
 import { usePageMeta } from "../hooks/usePageMeta.js";
 import { about, company, credentials, highlights } from "../data/content.js";
+import { pageCopy } from "../data/pages.js";
 import { Bolt, Check, Gauge, Globe, Layers, Pin, Sun, Target } from "../components/icons.jsx";
 
 import substationImg from "../../assets/site/substation.jpg";
@@ -57,7 +58,7 @@ export default function AboutPage() {
 
   return (
     <main>
-      <InnerHero crumb="About us" title={about.heading} accent="West Africa" intro={tab("who").body[0]} image={substationImg}>
+      <InnerHero crumb="About us" title={pageCopy.about.hero.title} accent={pageCopy.about.hero.accent} intro={pageCopy.about.hero.intro || tab("who").body[0]} image={pageCopy.about.hero.image || substationImg}>
         <BoxLink href="#story" light>Read our story</BoxLink>
       </InnerHero>
 
@@ -151,7 +152,7 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <PageEnd next={{ title: "Business solutions", to: "/solutions", image: tradingImg, summary: "One partner across the full power-trading value chain." }} />
+      <PageEnd next={{ ...pageCopy.about.next, to: "/solutions", image: tradingImg }} />
     </main>
   );
 }

@@ -1,35 +1,14 @@
 import { Link } from "react-router-dom";
 import { company, solutions } from "../data/content.js";
-import { slugify } from "../data/site.js";
+import { footer } from "../data/site.js";
 import { openConsentBanner } from "../lib/consent.js";
 import { OnctionMark } from "./Logo.jsx";
 import NewsletterSignup from "./NewsletterSignup.jsx";
 
-const companyLinks = [
-  { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "Business Solutions", href: "/solutions" },
-  { label: "How we trade", href: "/how-we-trade" },
-  { label: "Our market", href: "/market" },
-  { label: "GR0W", href: "/sustainability" },
-  { label: "Partners", href: "/partners" },
-  { label: "Contact", href: "/contact" },
-];
-
-const solutionLinks = solutions.items.slice(0, 5).map((s) => ({
-  label: s.title,
-  href: `/solutions#${slugify(s.title)}`,
-}));
-
-const resourceLinks = [
-  { label: "Market News", href: "/news" },
-  { label: "Events", href: "/events" },
-  { label: "Case studies", href: "/case-studies" },
-  { label: "NERC", href: "https://nerc.gov.ng/", external: true },
-  { label: "West African Power Pool", href: "https://www.ecowapp.org/", external: true },
-  { label: "UN SDG 7", href: "https://sdgs.un.org/goals/goal7", external: true },
-  { label: "Compliance & policies", href: "#" },
-];
+// Link columns come from data/site.js (editable in the dashboard); the
+// Solutions column follows the first five solutions.
+const solutionLinks = () => solutions.items.slice(0, 5).map((s) => ({ label: s.title, href: `/solutions#${s.slug}` }));
+const withExternal = (links) => links.map((l) => ({ ...l, external: /^https?:/.test(l.href) }));
 
 // ─── Minimal inline SVG social icons — no external icon library needed ──────
 
@@ -122,9 +101,9 @@ export default function Footer() {
           </div>
 
           <div className="grid gap-10 sm:grid-cols-3">
-            <FooterCol heading="Company" links={companyLinks} />
-            <FooterCol heading="Business Solutions" links={solutionLinks} />
-            <FooterCol heading="Regulatory & Resources" links={resourceLinks} />
+            <FooterCol heading="Company" links={footer.companyLinks} />
+            <FooterCol heading="Business Solutions" links={solutionLinks()} />
+            <FooterCol heading="Regulatory & Resources" links={withExternal(footer.resourceLinks)} />
           </div>
         </div>
       </div>

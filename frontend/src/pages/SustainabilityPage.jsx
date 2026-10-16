@@ -6,6 +6,7 @@ import Reveal from "../components/Reveal.jsx";
 import InView from "../motion/InView.jsx";
 import { usePageMeta } from "../hooks/usePageMeta.js";
 import { grow, sdg } from "../data/content.js";
+import { pageCopy } from "../data/pages.js";
 import { Check, Flame, Globe, Leaf, Target } from "../components/icons.jsx";
 
 import solarFieldImg from "../../assets/site/solar-field.jpg";
@@ -22,26 +23,23 @@ const PILLAR_VISUALS = [
   { icon: Globe, image: aerialImg },
 ];
 
-// The path to 2030, stated only in terms Onction already commits to.
-const PATH = [
-  { when: "Today", title: "Use what's already built", body: "Optimise capacity utilisation across existing gas-fired plants, reducing the need for new build." },
-  { when: "Scaling", title: "Give renewables a route to market", body: "Smooth solar, wind and hydro production curves through trading so clean projects reach buyers reliably." },
-  { when: "2030", title: "Net Zero", body: "A clear path toward carbon neutrality by 2030, alongside the SDG 7 goals below." },
-];
 
 export default function SustainabilityPage() {
   usePageMeta("Sustainability", "GR0W with Onction: efficient gas, renewable route-to-market, SDG 7 commitments and a path to Net Zero by 2030.");
+  const copy = pageCopy.sustainability;
+  // The path to 2030, stated only in terms Onction already commits to.
+  const PATH = copy.pathSteps;
 
   return (
     <main>
-      <InnerHero crumb="Sustainability" title="A clear path to Net Zero by 2030" accent="Net Zero" intro={grow.intro} image={solarFieldImg}>
+      <InnerHero crumb="Sustainability" title={copy.hero.title} accent={copy.hero.accent} intro={copy.hero.intro || grow.intro} image={copy.hero.image || solarFieldImg}>
         <BoxLink href="#grow" light>GR0W with Onction</BoxLink>
       </InnerHero>
 
       {/* GR0W pillars — sticky stacking cards */}
       <section id="grow" className="scroll-mt-20 bg-white">
         <div className="wrap py-20 sm:py-24">
-          <SectionTitle eyebrow={grow.eyebrow} title={grow.heading} accent="Onction Energy" intro="Four commitments that shape how we trade." />
+          <SectionTitle eyebrow={grow.eyebrow} title={grow.heading} accent="Onction Energy" intro={copy.pillarsIntro} />
           <ol className="mt-14">
             {grow.pillars.map((p, i) => {
               const { icon: Icon, image } = PILLAR_VISUALS[i];
@@ -73,7 +71,7 @@ export default function SustainabilityPage() {
       {/* Path to 2030 */}
       <section id="net-zero" className="scroll-mt-20 bg-mist">
         <div className="wrap py-20 sm:py-24">
-          <SectionTitle eyebrow="Net Zero by 2030" title="The road from here to 2030" accent="2030" />
+          <SectionTitle eyebrow={copy.path.eyebrow} title={copy.path.title} accent={copy.path.accent} />
           <InView className="relative mt-14">
             <div className="line-draw absolute left-0 right-0 top-[11px] hidden h-0.5 bg-teal-500 md:block" aria-hidden="true" />
             <ol className="relative grid gap-10 md:grid-cols-3">
@@ -101,7 +99,7 @@ export default function SustainabilityPage() {
             <SectionTitle light eyebrow={sdg.eyebrow} title={sdg.heading} accent="clean energy" intro={sdg.body} className="mt-2" />
           </div>
           <div>
-            <p className="mb-5 font-outfit text-sm text-teal-200">By 2030, we aim to —</p>
+            <p className="mb-5 font-outfit text-sm text-teal-200">{copy.goalsLead}</p>
             <ul className="space-y-4">
               {sdg.goals.map((g, i) => (
                 <Reveal as="li" key={g} delay={i * 90} variant="right" className="flex items-start gap-3 bg-white/[0.07] p-5 ring-1 ring-white/10">
@@ -119,7 +117,7 @@ export default function SustainabilityPage() {
         </div>
       </section>
 
-      <PageEnd next={{ title: "Case studies", to: "/case-studies", image: growthImg, summary: "Trading solutions in action across the West African power market." }} />
+      <PageEnd next={{ ...copy.next, to: "/case-studies", image: growthImg }} />
     </main>
   );
 }

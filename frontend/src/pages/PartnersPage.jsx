@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import InnerHero from "../components/page/InnerHero.jsx";
 import SectionTitle from "../components/page/SectionTitle.jsx";
@@ -10,48 +11,41 @@ import ImageReveal from "../motion/ImageReveal.jsx";
 import { usePageMeta } from "../hooks/usePageMeta.js";
 import { credentials, testimonials } from "../data/content.js";
 import { vendorPortalUrl } from "../data/site.js";
+import { pageCopy } from "../data/pages.js";
 import { Arrow } from "../components/icons.jsx";
+import EcosystemMap from "../components/partners/EcosystemMap.jsx";
+import PartnerDirectory from "../components/partners/PartnerDirectory.jsx";
+import { PreviewNotice } from "../components/content/Placeholder.jsx";
+import { visible } from "../lib/contentStatus.js";
+import { ECOSYSTEM, ORGANISATIONS } from "../data/partners.js";
 
 import handshakeImg from "../../assets/cytonn-photography-vWchRczcQwM-unsplash.jpg";
 import substationImg from "../../assets/site/substation.jpg";
 import pylonsImg from "../../assets/fre-sonneveld-q6n8nIrDQHE-unsplash.jpg";
 
 // Partner segments line up with the sectors in our testimonials, so each one
-// can point to what a partner of that kind actually said.
-const SEGMENTS = [
-  {
-    sector: "Independent Power Producer",
-    title: "Generators & IPPs",
-    offer: "A route to market for your output — offtake structuring, bilateral and cross-border sales, and smoother revenue for renewable projects.",
-    links: [["Renewable solutions", "/solutions#renewable-energy-solutions"], ["Power purchase & sale", "/solutions#power-purchase-and-sale"]],
-  },
-  {
-    sector: "Utility",
-    title: "Utilities & distribution companies",
-    offer: "Dependable supply, banking and swap arrangements to balance seasonal positions, and access to the wider WAPP market.",
-    links: [["Banking & swaps", "/solutions#power-banking-and-swaps"], ["Cross-border trading", "/solutions#cross-border-and-wapp-trading"]],
-  },
-  {
-    sector: "Commercial & Industrial Consumer",
-    title: "Large commercial & industrial users",
-    offer: "Bespoke supply contracts aggregated from multiple sources, priced to your load profile rather than a standard tariff.",
-    links: [["Energy efficiency", "/solutions#energy-efficiency-and-optimisation"], ["Portfolio management", "/solutions#power-portfolio-management"]],
-  },
-  {
-    sector: "International Developer",
-    title: "Developers & investors",
-    offer: "Market-entry, regulatory and structuring support, counterparty introductions and investment facilitation for new capacity.",
-    links: [["Advisory", "/solutions#advisory-and-consultancy"], ["Investment facilitation", "/solutions#investment-and-project-facilitation"]],
-  },
+// can point to what a partner of that kind actually said. Titles and offers
+// are page copy (data/pages.js); sectors and links are structural.
+const SEGMENT_LINKS = [
+  { sector: "Independent Power Producer", links: [["Renewable solutions", "/solutions#renewable-energy-solutions"], ["Power purchase & sale", "/solutions#power-purchase-and-sale"]] },
+  { sector: "Utility", links: [["Banking & swaps", "/solutions#power-banking-and-swaps"], ["Cross-border trading", "/solutions#cross-border-and-wapp-trading"]] },
+  { sector: "Commercial & Industrial Consumer", links: [["Energy efficiency", "/solutions#energy-efficiency-and-optimisation"], ["Portfolio management", "/solutions#power-portfolio-management"]] },
+  { sector: "International Developer", links: [["Advisory", "/solutions#advisory-and-consultancy"], ["Investment facilitation", "/solutions#investment-and-project-facilitation"]] },
 ];
 
 export default function PartnersPage() {
   usePageMeta("Partners", "How generators, utilities, large consumers, developers and suppliers work with Onction Energy.");
   const portal = vendorPortalUrl();
+  const copy = pageCopy.partners;
+  const SEGMENTS = copy.segments.map((s, i) => ({ ...s, ...SEGMENT_LINKS[i] }));
+  // The role picked on the ecosystem map also filters the directory.
+  const [role, setRole] = useState(null);
+  const orgs = useMemo(() => visible(ORGANISATIONS), []);
+  const counts = Object.fromEntries(ECOSYSTEM.map((e) => [e.key, orgs.filter((o) => o.ecosystem === e.key).length]));
 
   return (
     <main>
-      <InnerHero crumb="Business associates" title="Built on trusted partnerships" accent="partnerships" intro="We sit between the people who make electricity and the people who need it. Here's what that looks like for each of them." image={handshakeImg}>
+      <InnerHero crumb="Business associates" title={copy.hero.title} accent={copy.hero.accent} intro={copy.hero.intro} image={copy.hero.image || handshakeImg}>
         <div className="flex flex-wrap gap-4">
           <BoxLink href="#who" light>Who we work with</BoxLink>
         </div>
@@ -59,9 +53,30 @@ export default function PartnersPage() {
 
       <Marquee items={credentials} speed={55} />
 
+      {/* The market around Onction — roles, not claimed agreements */}
+      <section id="ecosystem" className="scroll-mt-20 overflow-hidden bg-navy-950 text-white">
+        <div className="wrap py-20 sm:py-24">
+          <SectionTitle light eyebrow={copy.ecosystem.eyebrow} title={copy.ecosystem.title} accent={copy.ecosystem.accent} intro={copy.ecosystem.intro} />
+          <div className="mt-12">
+            <EcosystemMap active={role} onSelect={setRole} counts={counts} />
+          </div>
+        </div>
+      </section>
+
+      {orgs.length > 0 && (
+        <section id="directory" className="scroll-mt-20 bg-mist">
+          <div className="wrap py-20 sm:py-24">
+            <SectionTitle eyebrow={copy.directory.eyebrow} title={copy.directory.title} accent={copy.directory.accent} intro={copy.directory.intro} />
+            <div className="mt-10">
+              <PartnerDirectory orgs={orgs} active={role} onSelect={setRole} />
+            </div>
+          </div>
+        </section>
+      )}
+
       <section id="who" className="scroll-mt-20 bg-white">
         <div className="wrap py-20 sm:py-24">
-          <SectionTitle eyebrow="Who we work with" title="One desk, four kinds of partner" accent="four kinds" />
+          <SectionTitle eyebrow={copy.who.eyebrow} title={copy.who.title} accent={copy.who.accent} />
           <div className="mt-12 grid gap-5 md:grid-cols-2">
             {SEGMENTS.map((s, i) => {
               const quote = testimonials.find((t) => t.sector === s.sector);
@@ -112,7 +127,18 @@ export default function PartnersPage() {
         </div>
       </section>
 
-      <PageEnd next={{ title: "How we trade", to: "/how-we-trade", image: pylonsImg, summary: "Follow a megawatt from the plant, through our desk, to the people who need it." }} />
+      {/* For prospective partners */}
+      <section className="bg-white">
+        <div className="wrap grid gap-8 border-t border-black/10 py-16 sm:py-20 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end">
+          <SectionTitle eyebrow={copy.workWith.eyebrow} title={copy.workWith.title} accent={copy.workWith.accent} intro={copy.workWith.intro} />
+          <Reveal delay={200} className="flex flex-wrap gap-4 lg:justify-end">
+            <BoxLink to="/contact">{copy.workWith.cta}</BoxLink>
+          </Reveal>
+        </div>
+      </section>
+
+      <PreviewNotice what="Organisations" />
+      <PageEnd next={{ ...copy.next, to: "/how-we-trade", image: pylonsImg }} />
     </main>
   );
 }

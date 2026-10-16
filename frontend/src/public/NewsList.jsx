@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import InnerHero from "../components/page/InnerHero.jsx";
 import Reveal from "../components/Reveal.jsx";
+import { pageCopy } from "../data/pages.js";
 import { usePageMeta } from "../hooks/usePageMeta.js";
 import chartImg from "../../assets/maxim-hopman-fiXLQXAhCfk-unsplash.jpg";
 
@@ -21,7 +22,7 @@ export default function NewsList() {
   return (
     <>
       <main>
-      <InnerHero crumb="Market news" title="Market news and updates" accent="updates" intro="Trading updates, announcements and perspectives on the West African power market." image={chartImg} compact />
+      <InnerHero crumb="Market news" title={pageCopy.news.hero.title} accent={pageCopy.news.hero.accent} intro={pageCopy.news.hero.intro} image={pageCopy.news.hero.image || chartImg} compact />
       <section className="wrap py-16 sm:py-20">
 
         {!posts && <p className="text-sm text-slatey">Loading…</p>}

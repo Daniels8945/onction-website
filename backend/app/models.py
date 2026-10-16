@@ -24,6 +24,11 @@ class Enquiry(SQLModel, table=True):
     utm_medium: Optional[str] = Field(default=None, max_length=200)
     utm_campaign: Optional[str] = Field(default=None, max_length=200)
     referrer_category: Optional[str] = Field(default=None, max_length=20)
+    # Analytics link (anonymous): the visit that produced this enquiry, and
+    # the page it began on. client_ref de-duplicates double submissions.
+    session_id: Optional[str] = Field(default=None, max_length=100, index=True)
+    landing_path: Optional[str] = Field(default=None, max_length=200)
+    client_ref: Optional[str] = Field(default=None, max_length=64, index=True)
 
 
 class EnquiryCreate(SQLModel):
@@ -38,6 +43,7 @@ class EnquiryCreate(SQLModel):
     # The browser's tracking session id (sessionStorage) — write-only, used
     # to look up acquisition data, never stored on the Enquiry directly.
     session_id: Optional[str] = Field(default=None, max_length=100)
+    client_ref: Optional[str] = Field(default=None, max_length=64)  # one per submit attempt; retries reuse it
 
 
 class EnquiryRead(SQLModel):

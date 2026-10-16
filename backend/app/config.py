@@ -51,6 +51,11 @@ class Settings(BaseSettings):
     # server today, and against Amazon SES / SendGrid / Mailgun's SMTP relays
     # unchanged later if deliverability becomes an issue — just swap host/
     # user/password, no code changes.
+    # Raw analytics events older than this are deleted (13 months by default,
+    # enough for year-on-year comparison). Aggregated reports are computed
+    # from the events, so this is the reporting history too.
+    analytics_retention_days: int = 395
+
     smtp_host: str = ""
     smtp_port: int = 587
     smtp_user: str = ""

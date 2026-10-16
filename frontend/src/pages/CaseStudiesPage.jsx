@@ -6,33 +6,25 @@ import Reveal from "../components/Reveal.jsx";
 import CountUp from "../motion/CountUp.jsx";
 import { usePageMeta } from "../hooks/usePageMeta.js";
 import { caseStudies, solutions } from "../data/content.js";
-import { caseStudySolution, slugify } from "../data/site.js";
+import { caseStudySolution } from "../data/site.js";
+import { pageCopy } from "../data/pages.js";
 import { Arrow } from "../components/icons.jsx";
 
 import chartImg from "../../assets/maxim-hopman-fiXLQXAhCfk-unsplash.jpg";
 import handshakeImg from "../../assets/cytonn-photography-vWchRczcQwM-unsplash.jpg";
 
-// The headline result of each study, taken from its own text in content.js.
-const RESULT = {
-  "Renewable Route-to-Market": { value: 50, suffix: " MW", label: "solar project brought to financing" },
-  "Cross-border Trading": { value: 1, suffix: "st", label: "privately arranged Ghana–Nigeria bilateral" },
-  "Gas-fired Optimisation": { value: 18, prefix: "+", suffix: " pts", label: "improvement in plant load factor" },
-  "Banking & Swaps": { value: 2, suffix: " markets", label: "balanced across seasons" },
-  "C&I Direct Supply": { value: 22, suffix: "%", label: "saving on energy costs" },
-  Advisory: { value: 9, prefix: "<", suffix: " mo", label: "time-to-PPA, down from 18" },
-};
-
-const solutionTitle = (slug) => solutions.items.find((s) => slugify(s.title) === slug)?.title;
+const solutionTitle = (slug) => solutions.items.find((s) => s.slug === slug)?.title;
 
 export default function CaseStudiesPage() {
   usePageMeta("Case studies", "Real transactions across the West African power market: renewables route-to-market, cross-border trading, gas optimisation, swaps, C&I supply and advisory.");
+  const copy = pageCopy["case-studies"];
   const categories = ["All", ...new Set(caseStudies.map((c) => c.category))];
   const [filter, setFilter] = useState("All");
   const visible = caseStudies.filter((c) => filter === "All" || c.category === filter);
 
   return (
     <main>
-      <InnerHero crumb="Case studies" title="Trading solutions in action" accent="in action" intro="Real transactions across the West African power market — what the problem was, what we structured, and what changed." image={chartImg} compact />
+      <InnerHero crumb="Case studies" title={copy.hero.title} accent={copy.hero.accent} intro={copy.hero.intro} image={copy.hero.image || chartImg} compact />
 
       <section className="bg-white">
         <div className="wrap py-14 sm:py-16">
@@ -52,10 +44,11 @@ export default function CaseStudiesPage() {
 
           <ol className="mt-12 border-t border-black/10">
             {visible.map((c, i) => {
-              const r = RESULT[c.category];
+              // headline figure, only when the study states one
+              const r = c.result?.value != null && c.result.value !== "" ? c.result : null;
               const sol = caseStudySolution[c.category];
               return (
-                <li key={c.title} id={slugify(c.title)} className="scroll-mt-28 border-b border-black/10">
+                <li key={c.slug} id={c.slug} className="scroll-mt-28 border-b border-black/10">
                   <Reveal className="grid gap-8 py-12 md:grid-cols-[minmax(220px,300px)_1fr] md:gap-14">
                     <div>
                       {r && (
@@ -94,7 +87,7 @@ export default function CaseStudiesPage() {
         </div>
       </section>
 
-      <PageEnd next={{ title: "Partner with Onction", to: "/partners", image: handshakeImg, summary: "Generators, utilities, large consumers and suppliers." }} />
+      <PageEnd next={{ ...copy.next, to: "/partners", image: handshakeImg }} />
     </main>
   );
 }

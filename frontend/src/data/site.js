@@ -3,9 +3,27 @@
 // information architecture (Who we are / What we do / … / Business
 // Associates) but cut down to what Onction actually is: a privately held,
 // NERC-licensed bulk electricity trader in the WAPP market. There is no
-// investor hub (private company) and no leadership/careers section, because
-// there is no real content for them yet — better absent than invented.
+// investor hub (private company) and no careers section. Leadership & Board
+// and Media & gallery are linked only once they have verified content (or
+// while previewing drafts) — better absent than invented.
+//
+// The menu, footer links and page list below are the built-in versions; the
+// dashboard can replace them (cms/registry.js), after which rebuildSite()
+// recomputes the exported, visitor-facing lists in place.
 import { solutions } from "./content.js";
+import { pageCopy } from "./pages.js";
+import { hasPublished, showDrafts } from "../lib/contentStatus.js";
+import { people } from "./leadership.js";
+import { gallery, stories } from "./media.js";
+
+// Which sections currently have something to show (recomputed by rebuildSite).
+export const liveSections = { leadership: false, media: false };
+const GATED = { "/leadership": "leadership", "/media": "media" };
+/** False for links to a section that has nothing published yet. */
+export function routeIsLive(to = "") {
+  const gate = GATED[to.split("#")[0]];
+  return !gate || liveSections[gate];
+}
 
 export function slugify(text) {
   return text
@@ -24,36 +42,25 @@ export function vendorPortalUrl() {
 }
 
 // Solutions grouped the way a buyer thinks about them. Indices refer to
-// solutions.items in content.js so copy stays in one place.
-export const solutionGroups = [
-  {
-    key: "trading",
-    title: "Power trading",
-    lede: "Buying, selling, banking and moving electricity between the parties who make it and the parties who need it.",
-    items: [0, 1, 2, 3],
-  },
-  {
-    key: "clean-energy",
-    title: "Clean energy & efficiency",
-    lede: "A dependable route to market for renewable generation, and tighter utilisation of the plants already running.",
-    items: [4, 5],
-  },
-  {
-    key: "advisory",
-    title: "Portfolio, advisory & investment",
-    lede: "Managing exposure across positions, and structuring the deals and projects that bring new capacity online.",
-    items: [6, 7, 8],
-  },
-].map((g) => ({ ...g, items: g.items.map((i) => ({ ...solutions.items[i], slug: slugify(solutions.items[i].title) })) }));
+// solutions.items in content.js; group names and intros are page copy
+// (data/pages.js). Filled in by rebuildSite().
+const GROUPS = [
+  { key: "trading", items: [0, 1, 2, 3] },
+  { key: "clean-energy", items: [4, 5] },
+  { key: "advisory", items: [6, 7, 8] },
+];
+export const solutionGroups = [];
 
 // Mega-menu sections. `illus` picks a line illustration in MegaMenu.jsx.
-export const menu = [
+// menuSource is what the dashboard edits; `menu` is what visitors see.
+export const menuSource = [
   {
     key: "who",
     label: "Who we are",
     blurb: "A NERC-licensed bulk electricity trader connecting West Africa's generators and buyers.",
     items: [
       { label: "Our story", to: "/about", illus: "story" },
+      { label: "Leadership & Board", to: "/leadership", illus: "leadership" },
       { label: "Licence & mandate", to: "/about#licence", illus: "licence" },
       { label: "Our presence", to: "/about#presence", illus: "presence" },
       { label: "Why Onction", to: "/about#why", illus: "why" },
@@ -97,6 +104,7 @@ export const menu = [
     label: "News and Media",
     blurb: "Market updates, announcements and upcoming events.",
     items: [
+      { label: "Media & gallery", to: "/media", illus: "gallery" },
       { label: "Market news", to: "/news", illus: "news" },
       { label: "Events", to: "/events", illus: "events" },
       { label: "Case studies", to: "/case-studies", illus: "cases" },
@@ -108,6 +116,7 @@ export const menu = [
     blurb: "Generators, utilities, large consumers and suppliers we work alongside.",
     items: [
       { label: "Partner with us", to: "/partners", illus: "partners" },
+      { label: "Energy ecosystem", to: "/partners#ecosystem", illus: "ecosystem" },
       { label: "What partners say", to: "/partners#testimonials", illus: "quote" },
       { label: "Vendor portal", href: "vendor-portal", illus: "portal", external: true },
     ],
@@ -123,8 +132,8 @@ export const menu = [
   },
 ];
 
-// Pages that exist, for search and the sitemap.
-export const pages = [
+// Pages that exist, for search and the sitemap (`pages` is the visitor-facing copy).
+const pagesSource = [
   { title: "Home", to: "/", summary: "Bulk electricity trading for West Africa." },
   { title: "About Onction", to: "/about", summary: "Who we are, our NERC licence and WAPP mandate, and where we operate." },
   { title: "Business solutions", to: "/solutions", summary: "Power trading, renewables route-to-market, portfolio management and advisory." },
@@ -132,7 +141,9 @@ export const pages = [
   { title: "Our market — WAPP", to: "/market", summary: "The 14-nation West African Power Pool and its cross-border corridors." },
   { title: "Sustainability", to: "/sustainability", summary: "GR0W with Onction, SDG 7 and our Net Zero by 2030 path." },
   { title: "Case studies", to: "/case-studies", summary: "Trading solutions in action across the West African power market." },
-  { title: "Partners", to: "/partners", summary: "Who we work with and how to partner with Onction." },
+  { title: "Partners", to: "/partners", summary: "Who we work with, the energy ecosystem around Onction, and how to partner with us." },
+  { title: "Leadership & Board", to: "/leadership", summary: "Our Chairman, Board of Directors, executive leadership and senior management." },
+  { title: "Media & gallery", to: "/media", summary: "Photographs, videos, milestones and featured stories from Onction." },
   { title: "Market news", to: "/news", summary: "Trading updates and announcements." },
   { title: "Events", to: "/events", summary: "Upcoming Onction events." },
   { title: "Contact", to: "/contact", summary: "Enquire with the trading desk in Lagos or Abuja." },
@@ -159,3 +170,52 @@ export const caseStudySolution = {
   "C&I Direct Supply": "power-purchase-and-sale",
   Advisory: "advisory-and-consultancy",
 };
+
+// Footer link columns (the Solutions column follows the solutions list).
+export const footerSource = {
+  companyLinks: [
+    { label: "Home", href: "/" },
+    { label: "About", href: "/about" },
+    { label: "Leadership & Board", href: "/leadership" },
+    { label: "Business Solutions", href: "/solutions" },
+    { label: "How we trade", href: "/how-we-trade" },
+    { label: "Our market", href: "/market" },
+    { label: "GR0W", href: "/sustainability" },
+    { label: "Partners", href: "/partners" },
+    { label: "Contact", href: "/contact" },
+  ],
+  resourceLinks: [
+    { label: "Media & gallery", href: "/media" },
+    { label: "Market News", href: "/news" },
+    { label: "Events", href: "/events" },
+    { label: "Case studies", href: "/case-studies" },
+    { label: "NERC", href: "https://nerc.gov.ng/" },
+    { label: "West African Power Pool", href: "https://www.ecowapp.org/" },
+    { label: "UN SDG 7", href: "https://sdgs.un.org/goals/goal7" },
+    { label: "Compliance & policies", href: "#" }, // placeholder in the approved footer; the dashboard flags it until it points somewhere
+  ],
+};
+
+// ── Visitor-facing versions, rebuilt whenever content changes ────────────────
+export const menu = [];
+export const pages = [];
+export const footer = { companyLinks: [], resourceLinks: [] };
+
+const replace = (arr, items) => arr.splice(0, arr.length, ...items);
+
+export function rebuildSite() {
+  liveSections.leadership = showDrafts || hasPublished(people);
+  liveSections.media = showDrafts || hasPublished([...gallery, ...stories]);
+  replace(
+    solutionGroups,
+    GROUPS.map((g, i) => ({ ...g, title: pageCopy.solutions.groups[i].title, lede: pageCopy.solutions.groups[i].lede, items: g.items.map((n) => solutions.items[n]) }))
+  );
+  replace(
+    menu,
+    menuSource.map((s) => ({ ...s, items: s.items.filter((i) => !i.hidden && routeIsLive(i.to || i.href)) })).filter((s) => s.items.length)
+  );
+  replace(pages, pagesSource.filter((p) => routeIsLive(p.to)));
+  replace(footer.companyLinks, footerSource.companyLinks.filter((l) => routeIsLive(l.href)));
+  replace(footer.resourceLinks, footerSource.resourceLinks.filter((l) => routeIsLive(l.href)));
+}
+rebuildSite();

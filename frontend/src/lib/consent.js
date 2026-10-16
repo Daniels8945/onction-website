@@ -35,7 +35,12 @@ export function setConsent(granted) {
   bannerOpen = false;
   try {
     localStorage.setItem(KEY, JSON.stringify({ analytics: granted, at: Date.now() }));
-    if (!granted) sessionStorage.removeItem("onction_sid");
+    if (!granted) {
+      // withdrawing consent deletes the anonymous analytics ids (lib/session.js)
+      localStorage.removeItem("onction_vid");
+      localStorage.removeItem("onction_session");
+      sessionStorage.removeItem("onction_sid");
+    }
   } catch {
     /* storage blocked — choice lasts for this page view */
   }

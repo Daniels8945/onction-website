@@ -5,6 +5,7 @@ import { useReducedMotion } from "../../motion/motionPreference.js";
 import Parallax from "../../motion/Parallax.jsx";
 import SplitText from "../../motion/SplitText.jsx";
 import Reveal from "../Reveal.jsx";
+import { ecosystemStory as copy } from "../../data/content.js";
 
 // "Living still" between Quick Links and Metrics: a cinematic, mostly-static
 // composition of West Africa's energy ecosystem with Onction at the point
@@ -274,13 +275,6 @@ const MODELED = new Set(INSTANCES.map((m) => m.id));
 
 const EcoModels = lazy(() => import("./EcoModels.jsx"));
 
-const STEPS = [
-  { title: "Generation", body: "Gas-fired plants and solar, wind and hydro projects produce power." },
-  { title: "Transmission", body: "The grid carries it across the country and between neighbours." },
-  { title: "Energy market", body: "Supply and demand meet — bilateral, exchange and regional." },
-  { title: "Onction", body: "We aggregate supply, structure the deal and manage the risk." },
-  { title: "Offtakers", body: "Utilities and large consumers receive dependable power." },
-];
 
 const DESKTOP_VIEW = "0 0 1600 740";
 const MOBILE_VIEW = "690 250 660 495"; // Nigeria, centred on the Onction hub
@@ -446,22 +440,20 @@ export default function EcosystemStory() {
         <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:items-end">
           <div>
             <Reveal variant="fade">
-              <p className="eco-eyebrow mb-3 font-outfit text-xs uppercase tracking-[0.22em]">The energy ecosystem</p>
+              <p className="eco-eyebrow mb-3 font-outfit text-xs uppercase tracking-[0.22em]">{copy.eyebrow}</p>
             </Reveal>
             <SplitText
               as="h2"
-              text="Where West Africa's power meets its market"
-              accent="its market"
+              text={copy.heading}
+              accent={copy.accent}
               accentClassName="eco-accent"
               className="eco-title max-w-2xl font-syne text-3xl font-medium leading-[1.1] sm:text-5xl"
             />
-            <span id="eco-heading" className="sr-only">Where West Africa's power meets its market</span>
+            <span id="eco-heading" className="sr-only">{copy.heading}</span>
           </div>
           <Reveal delay={200}>
             <p className="eco-body max-w-xl font-outfit leading-relaxed">
-              Electricity is generated, carried across the grid, traded and delivered. Onction sits where supply meets demand —
-              aggregating it, structuring the deal and moving power to the businesses and communities that need it, at home in
-              Nigeria and across the West African Power Pool.
+              {copy.body}
             </p>
           </Reveal>
         </div>
@@ -714,7 +706,7 @@ export default function EcosystemStory() {
             <ExploreCard active={active} pinned={!!pinned} onClear={clearPinned} />
           </div>
           <ol className="eco-steps flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:gap-px md:overflow-visible">
-            {STEPS.map((s, i) => (
+            {copy.steps.map((s, i) => (
               <li key={s.title} className="eco-step min-w-[70%] snap-start pt-5 sm:min-w-[40%] md:min-w-0" style={{ "--d": `${[900, 1300, 2100, 2700, 3300][i]}ms` }}>
                 <span className="eco-step-bar block h-0.5" />
                 <p className="mt-4 font-outfit text-xs tabular-nums">{String(i + 1).padStart(2, "0")}</p>
@@ -723,7 +715,7 @@ export default function EcosystemStory() {
               </li>
             ))}
           </ol>
-          <p className="eco-note mt-6 text-xs">Illustrative. Nodes represent the kinds of participants in the market — not specific assets, routes or volumes.</p>
+          <p className="eco-note mt-6 text-xs">{copy.note}</p>
         </div>
 
         {/* Hand-off to "Metrics that matter": the story settles, then the evidence */}

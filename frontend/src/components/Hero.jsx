@@ -241,9 +241,9 @@ export default function Hero() {
         {/* Layer 1 — slide photos crossfade (approved), each drifting slowly
             while it's on screen, and moving with the scroll for depth */}
         <Parallax speed={0.18} className={`absolute -inset-y-[6%] inset-x-0 transition-opacity duration-700 ${showPhoto ? "opacity-100" : "opacity-0"}`}>
-          {SLIDE_IMAGES.map((src, idx) => (
+          {heroSlides.map((s, idx) => s.image || SLIDE_IMAGES[idx % SLIDE_IMAGES.length]).map((src, idx) => (
             <img
-              key={src}
+              key={`${idx}-${src}`}
               src={src}
               alt=""
               fetchpriority={idx === 0 ? "high" : undefined}

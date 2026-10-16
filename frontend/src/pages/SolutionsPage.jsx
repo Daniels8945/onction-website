@@ -7,14 +7,15 @@ import SplitText from "../motion/SplitText.jsx";
 import Reveal from "../components/Reveal.jsx";
 import { usePageMeta } from "../hooks/usePageMeta.js";
 import { caseStudies, solutions } from "../data/content.js";
-import { caseStudySolution, slugify, solutionGroups } from "../data/site.js";
+import { caseStudySolution, solutionGroups } from "../data/site.js";
+import { pageCopy } from "../data/pages.js";
 import { SOLUTION_IMAGES } from "../data/solutionImages.js";
 import { Arrow } from "../components/icons.jsx";
 
 import stationImg from "../../assets/newpowa-wbWDnQ-1Ui0-unsplash.jpg";
 import pylonsImg from "../../assets/fre-sonneveld-q6n8nIrDQHE-unsplash.jpg";
 
-const imageFor = (title) => SOLUTION_IMAGES[solutions.items.findIndex((s) => s.title === title)];
+const imageFor = (item) => item.image || SOLUTION_IMAGES[solutions.items.findIndex((s) => s.slug === item.slug)];
 const caseFor = (slug) => caseStudies.find((c) => caseStudySolution[c.category] === slug);
 
 function SolutionItem({ item, index }) {
@@ -22,7 +23,7 @@ function SolutionItem({ item, index }) {
   return (
     <article id={item.slug} className="scroll-mt-28 border-t border-black/10 py-12 first:border-0 first:pt-0">
       <div className="grid gap-8 md:grid-cols-[1fr_1.1fr] md:items-center">
-        <ImageReveal src={imageFor(item.title)} alt="" className="aspect-[4/3]" from={index % 2 ? "right" : "left"} />
+        <ImageReveal src={imageFor(item)} alt="" className="aspect-[4/3]" from={index % 2 ? "right" : "left"} />
         <div>
           <p className="font-outfit text-sm text-teal-600">{String(index + 1).padStart(2, "0")}</p>
           <SplitText as="h3" text={item.title} className="mt-2 font-syne text-2xl font-medium leading-tight text-navy-900 sm:text-3xl" />
@@ -31,7 +32,7 @@ function SolutionItem({ item, index }) {
           </Reveal>
           {study && (
             <Reveal delay={220}>
-              <Link to={`/case-studies#${slugify(study.title)}`} className="group mt-6 block border-l-2 border-teal-500 bg-mist px-5 py-4 transition-colors duration-400 hover:bg-teal-50">
+              <Link to={`/case-studies#${study.slug}`} className="group mt-6 block border-l-2 border-teal-500 bg-mist px-5 py-4 transition-colors duration-400 hover:bg-teal-50">
                 <span className="block text-[11px] uppercase tracking-[0.16em] text-teal-700">In practice · {study.category}</span>
                 <span className="mt-1 flex items-start justify-between gap-4 text-sm font-medium text-navy-900">
                   {study.title}
@@ -53,11 +54,12 @@ function SolutionItem({ item, index }) {
 
 export default function SolutionsPage() {
   usePageMeta("Business solutions", "Power purchase and sale, banking and swaps, cross-border WAPP trading, renewable route-to-market, portfolio management and advisory.");
+  const copy = pageCopy.solutions;
   let running = 0;
 
   return (
     <main>
-      <InnerHero crumb="Business solutions" title={solutions.heading} accent="value chain" intro={solutions.intro} image={stationImg}>
+      <InnerHero crumb="Business solutions" title={copy.hero.title} accent={copy.hero.accent} intro={copy.hero.intro || solutions.intro} image={copy.hero.image || stationImg}>
         <div className="flex flex-wrap gap-3">
           {solutionGroups.map((g) => (
             <a key={g.key} href={`#${g.key}`} className="group inline-flex items-center gap-2 border border-white/30 px-4 py-2 text-sm text-white transition-colors duration-400 hover:border-teal-400 hover:text-teal-400">
@@ -101,7 +103,7 @@ export default function SolutionsPage() {
         );
       })}
 
-      <PageEnd next={{ title: "How we trade", to: "/how-we-trade", image: pylonsImg, summary: "Follow a megawatt from the plant, through our desk, to the people who need it." }} />
+      <PageEnd next={{ ...copy.next, to: "/how-we-trade", image: pylonsImg }} />
     </main>
   );
 }

@@ -6,8 +6,9 @@ import { openConsentBanner, useConsent } from "../lib/consent.js";
 // code: every key listed here is one the frontend actually reads or writes.
 const ROWS = [
   ["Analytics (only with your consent)", [
-    ["onction_sid", "Session storage", "Anonymous id for this browser tab, so pageviews can be grouped into a visit. Cleared when the tab closes."],
-    ["Pageview record", "Our server", "Page path, referrer, campaign tags, browser/OS and the country derived from your IP address. The IP address itself is not stored."],
+    ["onction_vid", "Local storage", "A random, anonymous id for this browser, so a return visit can be recognised. Not linked to who you are; deleted if you decline analytics."],
+    ["onction_session", "Local storage", "A random id for your current visit, so pageviews can be grouped together. A new one starts after 30 minutes of inactivity."],
+    ["Pageview record", "Our server", "Page path, the referring website's domain, campaign tags, device type, browser/OS, how long the page was in view, and your country as reported by our network provider (Cloudflare). Your IP address is not stored, and form contents are never part of it. Deleted after 13 months."],
   ]],
   ["Your preferences (always on — stored only on your device)", [
     ["onction:consent", "Local storage", "Remembers your analytics choice for 12 months."],

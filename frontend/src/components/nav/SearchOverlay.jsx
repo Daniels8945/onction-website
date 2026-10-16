@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { usePageTransition } from "../layout/PageTransition.jsx";
-import { menu, pages, quickSearch, solutionGroups, slugify } from "../../data/site.js";
+import { menu, pages, quickSearch, solutionGroups } from "../../data/site.js";
 import { caseStudies } from "../../data/content.js";
 import { Arrow } from "../icons.jsx";
 
@@ -20,7 +20,7 @@ function buildIndex() {
   solutionGroups.forEach((g) =>
     g.items.forEach((s) => add({ title: s.title, to: `/solutions#${s.slug}`, kind: "Solution", text: s.body }))
   );
-  caseStudies.forEach((c) => add({ title: c.title, to: `/case-studies#${slugify(c.title)}`, kind: "Case study", text: `${c.category} ${c.body}` }));
+  caseStudies.forEach((c) => add({ title: c.title, to: `/case-studies#${c.slug}`, kind: "Case study", text: `${c.category} ${c.body}` }));
   menu.forEach((s) => s.items.forEach((i) => i.to && add({ title: i.label, to: i.to, kind: s.label, text: s.blurb })));
   return out;
 }

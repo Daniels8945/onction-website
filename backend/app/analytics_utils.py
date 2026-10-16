@@ -1,6 +1,4 @@
-import json
 import logging
-import urllib.request
 from datetime import datetime
 
 from sqlmodel import Session, select
@@ -51,39 +49,19 @@ def parse_browser_os(user_agent: str | None) -> tuple[str, str]:
     return browser, os_name
 
 
-# --- GeoIP (best-effort, non-blocking) --------------------------------------
-# No MaxMind account on file, so this calls a free, no-signup IP-geolocation
-# API instead of a local GeoLite2 database. Same privacy pattern as the
-# visitor hash: the IP is used for one lookup and never persisted — only
-# the resolved country is stored. Trade-off: an external HTTP call in the
-# path (run as a background task so it never slows the tracking beacon),
-# subject to that free service's uptime/rate limits. Swap for a local
-# MaxMind GeoLite2 database later if that becomes unreliable at your volume.
-
-def resolve_country(ip: str) -> str | None:
-    if not ip or ip in ("unknown", "127.0.0.1", "testclient"):
-        return None
-    try:
-        req = urllib.request.Request(
-            f"https://ipapi.co/{ip}/json/",
-            headers={"User-Agent": "onction-energy-website/1.0"},
-        )
-        with urllib.request.urlopen(req, timeout=3) as resp:
-            data = json.loads(resp.read())
-        country = data.get("country_name")
-        return country if isinstance(country, str) and country else None
-    except Exception as exc:  # noqa: BLE001 — best-effort, never fatal
-        logger.info("GeoIP lookup failed for this request: %s", exc)
-        return None
-
+# Country: the old third-party IP lookup (which sent visitors' IP addresses
+# to an external service) has been removed. Country now comes only from
+# Cloudflare's CF-IPCountry header at ingestion — see analytics_engine.
 
 # --- Session attribution -----------------------------------------------------
 
 def get_session_attribution(session: Session, session_id: str | None) -> dict:
     """Looks up the landing pageview for a browser session (by its
     client-generated session_id) and returns the acquisition data it
-    carried — used to attribute an enquiry/registration back to the
-    channel that actually produced it."""
+    carried, plus the session id and landing page — used to attribute an
+    enquiry/registration back to the visit and channel that produced it.
+    Only anonymous analytics data flows this way; nothing personal goes
+    into analytics."""
     from .models_analytics import PageView  # local import avoids a cycle
 
     if not session_id:
@@ -94,6 +72,8 @@ def get_session_attribution(session: Session, session_id: str | None) -> dict:
     if first_view is None:
         return {}
     return {
+        "session_id": session_id,
+        "landing_path": first_view.path,
         "utm_source": first_view.utm_source,
         "utm_medium": first_view.utm_medium,
         "utm_campaign": first_view.utm_campaign,

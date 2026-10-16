@@ -9,6 +9,7 @@ import {
   LuHistory,
   LuImages,
   LuInbox,
+  LuLayoutTemplate,
   LuLogOut,
   LuMail,
   LuMenu,
@@ -36,7 +37,8 @@ const NAV_SECTIONS = [
   {
     label: "Website",
     items: [
-      { to: "/admin/pages", label: "Pages", icon: LuFileText },
+      { to: "/admin/content", label: "Website content", icon: LuLayoutTemplate },
+      { to: "/admin/pages", label: "Campaign pages", icon: LuFileText },
       { to: "/admin/news", label: "News", icon: LuNewspaper },
       { to: "/admin/events", label: "Events", icon: LuCalendar },
       { to: "/admin/newsletter", label: "Newsletter", icon: LuMail },

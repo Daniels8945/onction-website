@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import InnerHero from "../components/page/InnerHero.jsx";
 import Reveal from "../components/Reveal.jsx";
+import { pageCopy } from "../data/pages.js";
 import { usePageMeta } from "../hooks/usePageMeta.js";
 import handshakeImg from "../../assets/cytonn-photography-vWchRczcQwM-unsplash.jpg";
 
@@ -21,7 +22,7 @@ export default function EventsList() {
   return (
     <>
       <main>
-      <InnerHero crumb="Events" title="Where to meet the desk" accent="the desk" intro="Briefings, forums and industry events hosted or attended by Onction Energy." image={handshakeImg} compact />
+      <InnerHero crumb="Events" title={pageCopy.events.hero.title} accent={pageCopy.events.hero.accent} intro={pageCopy.events.hero.intro} image={pageCopy.events.hero.image || handshakeImg} compact />
       <section className="wrap py-16 sm:py-20">
 
         {!events && <p className="text-sm text-slatey">Loading…</p>}

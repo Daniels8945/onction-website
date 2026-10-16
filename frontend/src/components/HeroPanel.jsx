@@ -1,6 +1,7 @@
 import { useCarousel } from "../hooks/useCarousel.js";
 import { quickLinks, badges } from "../data/content.js";
 import { Arrow } from "./icons.jsx";
+import { routeIsLive } from "../data/site.js";
 import { FaArrowRightLong } from "react-icons/fa6";
 
 // Square arrow button reused for badge prev/next — extracted to avoid repetition.
@@ -62,7 +63,7 @@ export default function HeroPanel() {
                 {quickLinks.map((l) => (
                   <a
                     key={l.label}
-                    href={l.href}
+                    href={routeIsLive(l.href) ? l.href : l.href === "/leadership" ? "/about" : "/"}
                     className="flex items-center justify-between text-[clamp(12px,1.5vw,17px)] font-regular text-[#f8f5ec] transition group">
 
                     {l.label}

@@ -220,6 +220,42 @@ If SMTP isn't configured yet, everything above should still work except the
 emails — check `docker compose logs backend` for `Email send failed to ...`
 warnings rather than a broken request.
 
+## Website content (dashboard)
+
+Words, photos and links across the public site are edited in the dashboard
+under **Website → Website content** (`/admin/content`). Each area is saved as
+a draft, previewed on the real page (staff only), reviewed and then published;
+nothing changes for visitors until it's published, and every publish can be
+restored from **History**. Areas with nothing published keep showing the
+site's built-in content, so a fresh deploy looks exactly as before.
+
+- No migration step: the two tables (`contentdoc`, `contentrevision`) are
+  created automatically on startup.
+- Contact details, the main menu and the footer are **protected**: Admins can
+  draft them, only a **Super Admin** can publish them.
+- **Viewers** can read everything but change nothing.
+- The **Coverage report** (`/admin/content/coverage`) lists what is editable
+  and what deliberately stays in code, and why.
+- Photos and videos come from the Media library, so object storage (step 4)
+  must be configured before editors can upload new images.
+
+## Analytics
+
+The dashboard's **Analytics** page reads anonymous, consent-based tracking from
+the public site. Nothing needs configuring, but note:
+
+- **Country** comes from Cloudflare's `CF-IPCountry` header, so it only fills
+  in when the site is served through Cloudflare (no IP addresses are stored or
+  looked up). The nginx configs pass the header through unchanged.
+- **Retention:** raw events older than `ANALYTICS_RETENTION_DAYS` (default 395,
+  about 13 months) are deleted automatically. Set it in `.env` to change it.
+- Data recorded before this version used IP-based visitor counting (which the
+  proxy made identical for every visitor) and time-on-page that included idle
+  tabs. It's kept, labelled as older tracking, and excluded from visitor and
+  engagement figures — see the Data health tab.
+- Staff signed in to the dashboard are never counted, so testing the live site
+  while logged in won't affect the numbers.
+
 ## Day-to-day operations
 
 | Task | Command |

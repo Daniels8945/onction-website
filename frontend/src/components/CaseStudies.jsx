@@ -5,7 +5,6 @@ import CarouselControls from "./CarouselControls.jsx";
 import Reveal from "./Reveal.jsx";
 import { Link } from "react-router-dom";
 import { Arrow } from "./icons.jsx";
-import { slugify } from "../data/site.js";
 
 // Shows 3 cards on desktop (wrapping), 1 on mobile. Prev/Next step by 1.
 export default function CaseStudies() {
@@ -63,7 +62,7 @@ export default function CaseStudies() {
 
 function CaseCard({ study }) {
   return (
-    <Link to={`/case-studies#${slugify(study.title)}`} className="group block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400">
+    <Link to={`/case-studies#${study.slug}`} className="group block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400">
     <article className="flex h-full flex-col rounded-none border border-white/10 bg-white/[0.04] p-6 backdrop-blur transition hover:border-teal-500/40 hover:bg-white/[0.07]">
       <p className="font-outfit text-xs uppercase tracking-[0.18em] text-teal-400">
         {study.category}

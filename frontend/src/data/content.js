@@ -66,7 +66,8 @@ export const quickLinks = [
   { label: "Our offerings", href: "/solutions" },
   { label: "Our presence", href: "/about#presence" },
   { label: "Resource centre", href: "/news" },
-  { label: "Our leadership", href: "/about" },
+  // Shown as /about until Leadership has verified profiles (HeroPanel).
+  { label: "Our leadership", href: "/leadership" },
   { label: "GR0W with Onction", href: "/sustainability" },
   { label: "Enquire now", href: "/contact" },
 ];
@@ -283,36 +284,60 @@ export const sdg = {
   ],
 };
 
+// Words around the homepage's animated West Africa map (EcosystemStory.jsx).
+export const ecosystemStory = {
+  eyebrow: "The energy ecosystem",
+  heading: "Where West Africa's power meets its market",
+  accent: "its market",
+  body: "Electricity is generated, carried across the grid, traded and delivered. Onction sits where supply meets demand — aggregating it, structuring the deal and moving power to the businesses and communities that need it, at home in Nigeria and across the West African Power Pool.",
+  steps: [
+    { title: "Generation", body: "Gas-fired plants and solar, wind and hydro projects produce power." },
+    { title: "Transmission", body: "The grid carries it across the country and between neighbours." },
+    { title: "Energy market", body: "Supply and demand meet — bilateral, exchange and regional." },
+    { title: "Onction", body: "We aggregate supply, structure the deal and manage the risk." },
+    { title: "Offtakers", body: "Utilities and large consumers receive dependable power." },
+  ],
+  note: "Illustrative. Nodes represent the kinds of participants in the market — not specific assets, routes or volumes.",
+};
+
+// `result` is the headline figure shown on the Case studies page, taken from
+// each study's own text. `slug` (added below) is its permanent web address.
 export const caseStudies = [
   {
     category: "Renewable Route-to-Market",
     title: "Solar IPP — Offtake structuring for a 50 MW project in Ogun State",
     body: "Structured a long-term PPA that smoothed the revenue profile of an independent solar IPP, enabling project financing and grid connection within the WAPP framework.",
+    result: { prefix: "", value: 50, suffix: " MW", label: "solar project brought to financing" },
   },
   {
     category: "Cross-border Trading",
     title: "Ghana–Nigeria bilateral transaction under WAPP open-access rules",
     body: "Facilitated the first privately arranged cross-border bilateral contract between a Ghanaian generator and a Nigerian DISCO, demonstrating WAPP market liquidity.",
+    result: { prefix: "", value: 1, suffix: "st", label: "privately arranged Ghana–Nigeria bilateral" },
   },
   {
     category: "Gas-fired Optimisation",
     title: "Capacity utilisation improvement for a 132 MW gas plant in Delta State",
     body: "Through active portfolio management and merchant trading, improved plant load factor by 18 percentage points, reducing the effective cost of electricity for downstream buyers.",
+    result: { prefix: "+", value: 18, suffix: " pts", label: "improvement in plant load factor" },
   },
   {
     category: "Banking & Swaps",
     title: "Seasonal swap arrangement between utilities in Senegal and Côte d'Ivoire",
     body: "Designed and executed a banking-and-swap contract that balanced seasonal hydro surplus in one market against peak thermal demand in another.",
+    result: { prefix: "", value: 2, suffix: " markets", label: "balanced across seasons" },
   },
   {
     category: "C&I Direct Supply",
     title: "Competitive tariff supply for a large industrial group in Lagos",
     body: "Aggregated generation capacity from multiple sources to deliver a bespoke supply contract below prevailing MYTO tariffs, saving the client 22% on energy costs.",
+    result: { prefix: "", value: 22, suffix: "%", label: "saving on energy costs" },
   },
   {
     category: "Advisory",
     title: "Market-entry advisory for a UK-based renewable developer entering West Africa",
     body: "Provided regulatory, structuring and counterparty-identification support that reduced the developer's time-to-PPA from 18 months to under 9.",
+    result: { prefix: "<", value: 9, suffix: " mo", label: "time-to-PPA, down from 18" },
   },
 ];
 
@@ -346,6 +371,12 @@ export const testimonials = [
     sector: "International Developer",
   },
 ];
+
+// Permanent web addresses (/solutions#…, /case-studies#…): fixed from the
+// original titles so editing a title in the dashboard never breaks a link.
+const slug = (t) => t.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+solutions.items.forEach((i) => (i.slug = slug(i.title)));
+caseStudies.forEach((c) => (c.slug = slug(c.title)));
 
 // West African / WAPP member states for the enquiry form country field.
 export const countries = [

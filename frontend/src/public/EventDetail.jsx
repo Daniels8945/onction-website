@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getSessionId } from "../lib/session.js";
+import { trackEvent } from "../lib/trackPageview.js";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
@@ -30,7 +31,7 @@ function RegistrationForm({ slug, onRegistered }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card space-y-3">
+    <form onSubmit={handleSubmit} onFocusCapture={() => trackEvent("form_start", { form: "registration" }, "registration-start")} className="card space-y-3">
       <input
         required
         placeholder="Full name"

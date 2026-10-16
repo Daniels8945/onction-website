@@ -41,6 +41,7 @@ services:
       ALERT_EMAIL: ${ALERT_EMAIL:-}
       PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-}
       VENDOR_PORTAL_URL: ${VENDOR_PORTAL_URL:-}
+      ANALYTICS_RETENTION_DAYS: ${ANALYTICS_RETENTION_DAYS:-395}
 
   frontend:
     build: ./frontend

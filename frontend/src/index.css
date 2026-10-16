@@ -356,6 +356,47 @@
 .is-in .map-node { opacity: 1; }
 .map-node:focus-visible circle:nth-of-type(2) { stroke: #2dd4bf; stroke-width: 2; }
 
+/* Media hero: network nodes pop in just before their photo opens */
+.media-node { opacity: 0; transform: translate(-50%, -50%) scale(0.3); transition: opacity 500ms var(--ease-out) var(--d, 0ms), transform 600ms var(--ease-out) var(--d, 0ms); }
+.is-in .media-node { opacity: 1; transform: translate(-50%, -50%); }
+[data-motion="reduced"] .media-node { opacity: 1; transform: translate(-50%, -50%); transition: none; }
+
+/* Partner ecosystem map (EcosystemMap.jsx) */
+.eco2-side { fill: rgba(248, 245, 236, 0.4); font: 600 13px Outfit, system-ui, sans-serif; letter-spacing: 0.32em; }
+.eco2-divider { stroke: rgba(248, 245, 236, 0.12); stroke-width: 1; stroke-dasharray: 1; }
+.eco2-line { fill: none; stroke: rgba(138, 160, 184, 0.45); stroke-width: 1.6; transition: stroke 400ms var(--ease-out), stroke-width 400ms var(--ease-out), opacity 400ms var(--ease-out); }
+.eco2-link.on .eco2-line { stroke: #2dd4bf; stroke-width: 2.6; }
+.eco2-p { opacity: 0; transition: opacity 600ms var(--ease-out) 1600ms; }
+.is-in .eco2-p { opacity: 1; }
+.eco2-p-in { fill: #f7b955; }
+.eco2-p-out { fill: #7ff5e8; }
+.eco2-hub { opacity: 0; transform: scale(0.8); transform-origin: 500px 300px; transition: opacity 900ms var(--ease-out) 150ms, transform 1100ms var(--ease-out) 150ms; }
+.is-in .eco2-hub { opacity: 1; transform: none; }
+.eco2-ring { fill: none; stroke: #13c2b6; stroke-width: 1.5; stroke-dasharray: 3 7; }
+.is-in .eco2-ring { animation: ecoTurn 60s linear infinite; }
+.eco2-inner { fill: none; stroke: #13c2b6; stroke-width: 2; }
+.eco2-core { fill: #13c2b6; stroke: #e9fffc; stroke-width: 3; }
+.eco2-hub-label { fill: #fff; font: 700 22px Outfit, system-ui, sans-serif; letter-spacing: 0.34em; }
+.eco2-small { fill: rgba(248, 245, 236, 0.55); font: 500 15px Outfit, system-ui, sans-serif; letter-spacing: 0.06em; }
+.eco2-node { cursor: pointer; outline: none; opacity: 0; transition: opacity 600ms var(--ease-out) var(--d, 0ms); }
+.is-in .eco2-node { opacity: 1; }
+.eco2-node-ring { fill: #06121f; stroke: rgba(248, 245, 236, 0.55); stroke-width: 1.6; transition: stroke 400ms var(--ease-out), fill 400ms var(--ease-out); }
+.eco2-node-n { fill: #fff; font: 600 16px Outfit, system-ui, sans-serif; pointer-events: none; transition: fill 400ms var(--ease-out); }
+.eco2-label { fill: rgba(248, 245, 236, 0.85); font: 600 19px Outfit, system-ui, sans-serif; letter-spacing: 0.02em; pointer-events: none; transition: fill 400ms var(--ease-out); }
+.eco2-node.on .eco2-node-ring, .eco2-node:focus-visible .eco2-node-ring { stroke: #2dd4bf; stroke-width: 2.6; }
+.eco2-node.pinned .eco2-node-ring { fill: #13c2b6; stroke: #13c2b6; }
+.eco2-node.pinned .eco2-node-n { fill: #06121f; }
+.eco2-node.on .eco2-label { fill: #2dd4bf; }
+/* With a role in focus, everything else steps back */
+.eco2-focus .eco2-link:not(.on), .eco2-focus .eco2-node:not(.on) { opacity: 0.28; }
+[data-motion="reduced"] .eco2-hub, [data-motion="reduced"] .eco2-node { opacity: 1; transform: none; transition: none; }
+
+/* Dialogs (profiles, media viewer) rise in */
+@keyframes dialogPop { from { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.985); } }
+.dialog-pop[open] { animation: dialogPop 420ms var(--ease-out); }
+.dialog-pop::backdrop { animation: fadeIn 300ms ease-out; }
+@keyframes fadeIn { from { opacity: 0; } }
+
 /* Straight connector that draws left→right when its InView parent enters */
 .line-draw { transform: scaleX(0); transform-origin: left; transition: transform 1600ms var(--ease-inout) 200ms; }
 .is-in .line-draw { transform: scaleX(1); }

@@ -31,14 +31,30 @@ _NEW_COLUMNS: dict[str, list[tuple[str, str]]] = {
         ("utm_content", "VARCHAR(200)"),
         ("referrer_category", "VARCHAR(20)"),
         ("country", "VARCHAR(100)"),
+        # analytics v2
+        ("event_id", "VARCHAR(64)"),
+        ("visitor_id", "VARCHAR(64)"),
+        ("host", "VARCHAR(100)"),
+        ("known_route", "BOOLEAN"),
+        ("referrer_domain", "VARCHAR(200)"),
+        ("device", "VARCHAR(10)"),
+        ("browser", "VARCHAR(40)"),
+        ("os", "VARCHAR(40)"),
+        ("viewport", "VARCHAR(4)"),
+        ("engaged_ms", "INTEGER"),
     ],
     "enquiry": [
+        ("session_id", "VARCHAR(100)"),
+        ("landing_path", "VARCHAR(200)"),
+        ("client_ref", "VARCHAR(64)"),
         ("utm_source", "VARCHAR(200)"),
         ("utm_medium", "VARCHAR(200)"),
         ("utm_campaign", "VARCHAR(200)"),
         ("referrer_category", "VARCHAR(20)"),
     ],
     "registration": [
+        ("session_id", "VARCHAR(100)"),
+        ("landing_path", "VARCHAR(200)"),
         ("utm_source", "VARCHAR(200)"),
         ("utm_medium", "VARCHAR(200)"),
         ("utm_campaign", "VARCHAR(200)"),
@@ -68,11 +84,29 @@ def _add_missing_columns() -> None:
                 conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {coltype}"))
 
 
+# Indexes on columns added later (create_all only indexes new tables).
+_NEW_INDEXES = [
+    "CREATE UNIQUE INDEX IF NOT EXISTS ux_pageview_event_id ON pageview (event_id)",
+    "CREATE INDEX IF NOT EXISTS ix_pageview_visitor_id ON pageview (visitor_id)",
+    "CREATE INDEX IF NOT EXISTS ix_pageview_session_created ON pageview (session_id, created_at)",
+    "CREATE INDEX IF NOT EXISTS ix_enquiry_session_id ON enquiry (session_id)",
+    "CREATE INDEX IF NOT EXISTS ix_enquiry_client_ref ON enquiry (client_ref)",
+    "CREATE INDEX IF NOT EXISTS ix_registration_session_id ON registration (session_id)",
+]
+
+
+def _add_missing_indexes() -> None:
+    with engine.begin() as conn:
+        for stmt in _NEW_INDEXES:
+            conn.execute(text(stmt))
+
+
 def init_db() -> None:
     """Create tables if they don't exist yet, then patch in any columns
     added since existing tables were first created."""
     SQLModel.metadata.create_all(engine)
     _add_missing_columns()
+    _add_missing_indexes()
 
 
 def get_session():

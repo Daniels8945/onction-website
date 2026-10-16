@@ -18,6 +18,12 @@ settings = get_settings()
 @router.post("", response_model=EnquiryRead, status_code=201)
 def create_enquiry(payload: EnquiryCreate, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):
     """Public — this is the website's contact form submitting."""
+    # A retried submission (same client_ref) returns the enquiry already saved
+    # instead of creating — and counting — a second one.
+    if payload.client_ref:
+        existing = session.exec(select(Enquiry).where(Enquiry.client_ref == payload.client_ref)).first()
+        if existing:
+            return existing
     data = payload.model_dump(exclude={"session_id"})
     enquiry = Enquiry(**data, **get_session_attribution(session, payload.session_id))
     session.add(enquiry)

@@ -8,36 +8,32 @@ import CountUp from "../motion/CountUp.jsx";
 import ImageReveal from "../motion/ImageReveal.jsx";
 import { usePageMeta } from "../hooks/usePageMeta.js";
 import { metrics, caseStudies } from "../data/content.js";
-import { slugify } from "../data/site.js";
+import { pageCopy } from "../data/pages.js";
 import { Bolt, Globe, Layers, Handshake, Gauge } from "../components/icons.jsx";
 
 import aerialImg from "../../assets/site/aerial-network.jpg";
 import damImg from "../../assets/tahamie-farooqui-kMHBf1h4pU8-unsplash.jpg";
 import greenImg from "../../assets/site/green-spiral.jpg";
 
-// Market participants, and where Onction sits among them.
-const PARTICIPANTS = [
-  { icon: Bolt, title: "Generators", body: "Gas-fired power stations and renewable projects — solar, wind and hydro — that need a buyer for their output." },
-  { icon: Layers, title: "Transmission operators", body: "The national grids and regional interconnectors that carry bulk power between systems." },
-  { icon: Gauge, title: "Utilities & distribution companies", body: "Buyers who take power off the grid and deliver it to homes and businesses." },
-  { icon: Globe, title: "Large consumers", body: "Commercial and industrial users whose load justifies bespoke supply arrangements." },
-  { icon: Handshake, title: "Traders — Onction", body: "The intermediary that aggregates supply and demand, structures contracts and manages the risk in between.", ours: true },
-];
-
-const crossBorder = caseStudies.filter((c) => /cross-border|banking/i.test(c.category));
+// Market participants, and where Onction sits among them (the last one).
+// Words come from data/pages.js; icons stay with the design.
+const PARTICIPANT_ICONS = [Bolt, Layers, Gauge, Globe, Handshake];
 
 export default function MarketPage() {
   usePageMeta("Our market — the West African Power Pool", "The 14-nation West African Power Pool, its main interconnection corridors, and where Onction trades.");
+  const copy = pageCopy.market;
   const wapp = metrics.find((m) => m.value === "14");
+  const crossBorder = caseStudies.filter((c) => /cross-border|banking/i.test(c.category));
+  const participants = copy.participantList.map((p, i, all) => ({ ...p, icon: PARTICIPANT_ICONS[i], ours: i === all.length - 1 }));
 
   return (
     <main>
       <InnerHero
         crumb="Our market"
-        title="One regional market, fourteen nations"
-        accent="fourteen nations"
-        intro="The West African Power Pool (WAPP) is the ECOWAS institution integrating its member states' national power systems into a single regional electricity market. As a WAPP market participant, Onction trades across it."
-        image={aerialImg}
+        title={copy.hero.title}
+        accent={copy.hero.accent}
+        intro={copy.hero.intro}
+        image={copy.hero.image || aerialImg}
       >
         <div className="flex flex-wrap gap-4">
           <BoxLink href="#network" light>Explore the network</BoxLink>
@@ -47,7 +43,7 @@ export default function MarketPage() {
       {/* Network map */}
       <section id="network" className="scroll-mt-20 bg-navy-900 text-white">
         <div className="wrap py-20 sm:py-24">
-          <SectionTitle light eyebrow="The WAPP network" title="How the region's grids connect" accent="connect" intro="Hover or tap a country to see its corridors. Nigeria — our home market — is where we hold our trading licence." className="mb-12" />
+          <SectionTitle light eyebrow={copy.network.eyebrow} title={copy.network.title} accent={copy.network.accent} intro={copy.network.intro} className="mb-12" />
           <WappMap />
         </div>
       </section>
@@ -79,13 +75,9 @@ export default function MarketPage() {
         <div className="wrap grid gap-12 py-20 sm:py-24 lg:grid-cols-2 lg:items-center">
           <ImageReveal src={damImg} alt="A hydroelectric dam releasing water" className="aspect-[4/3]" from="left" />
           <div>
-            <SectionTitle eyebrow="Cross-border trading" title="Why power should cross borders" accent="cross borders" />
+            <SectionTitle eyebrow={copy.corridors.eyebrow} title={copy.corridors.title} accent={copy.corridors.accent} />
             <ul className="mt-8 space-y-5">
-              {[
-                ["Surplus meets demand", "A hydro-rich system in the rainy season can sell to a neighbour running expensive thermal peaking plant."],
-                ["Seasonal balancing", "Banking and swap contracts let utilities exchange power across seasons instead of curtailing generation."],
-                ["Lower cost, wider access", "Better use of existing plants and fairer tariffs are how the region reduces energy poverty."],
-              ].map(([t, b], i) => (
+              {copy.reasons.map(({ title: t, body: b }, i) => (
                 <Reveal as="li" key={t} delay={i * 90} className="border-l-2 border-teal-500 pl-5">
                   <h3 className="font-semibold text-navy-900">{t}</h3>
                   <p className="mt-1 text-sm leading-relaxed text-slatey">{b}</p>
@@ -94,7 +86,7 @@ export default function MarketPage() {
             </ul>
             {crossBorder.length > 0 && (
               <Reveal delay={300} className="mt-10 flex flex-wrap gap-4">
-                <BoxLink to={`/case-studies#${slugify(crossBorder[0].title)}`}>See it in a case study</BoxLink>
+                <BoxLink to={`/case-studies#${crossBorder[0].slug}`}>See it in a case study</BoxLink>
               </Reveal>
             )}
           </div>
@@ -104,9 +96,9 @@ export default function MarketPage() {
       {/* Participants */}
       <section id="participants" className="scroll-mt-20 bg-mist">
         <div className="wrap py-20 sm:py-24">
-          <SectionTitle eyebrow="Market participants" title="Who takes part, and where we fit" accent="where we fit" intro="Electricity markets work because different parties play different roles. Ours is the connective one." />
+          <SectionTitle eyebrow={copy.participants.eyebrow} title={copy.participants.title} accent={copy.participants.accent} intro={copy.participants.intro} />
           <ol className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {PARTICIPANTS.map((p, i) => (
+            {participants.map((p, i) => (
               <Reveal as="li" key={p.title} delay={i * 80}>
                 <div className={`relative flex h-full flex-col p-6 ${p.ours ? "bg-navy-900 text-white" : "border border-black/5 bg-white"}`}>
                   <span className={`font-outfit text-xs ${p.ours ? "text-teal-400" : "text-teal-600"}`}>{String(i + 1).padStart(2, "0")}</span>
@@ -120,7 +112,7 @@ export default function MarketPage() {
         </div>
       </section>
 
-      <PageEnd next={{ title: "Sustainability: GR0W with Onction", to: "/sustainability", image: greenImg, summary: "Renewables, efficient gas and a path to Net Zero by 2030." }} />
+      <PageEnd next={{ ...copy.next, to: "/sustainability", image: greenImg }} />
     </main>
   );
 }

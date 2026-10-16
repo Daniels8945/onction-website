@@ -4,6 +4,8 @@
 // never appears half-loaded.
 export const pageLoaders = {
   "/about": () => import("./AboutPage.jsx"),
+  "/leadership": () => import("./LeadershipPage.jsx"),
+  "/media": () => import("./MediaPage.jsx"),
   "/solutions": () => import("./SolutionsPage.jsx"),
   "/how-we-trade": () => import("./HowWeTradePage.jsx"),
   "/market": () => import("./MarketPage.jsx"),

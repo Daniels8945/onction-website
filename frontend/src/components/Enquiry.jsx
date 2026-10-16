@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { trackEvent } from "../lib/trackPageview.js";
+import { uuid } from "../lib/session.js";
 import { countries, company } from "../data/content.js";
 import { submitEnquiry } from "../api.js";
 import Reveal from "./Reveal.jsx";
@@ -22,6 +24,24 @@ export default function Enquiry({ topic } = {}) {
 
   const update = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  // Analytics (only with consent): the form was seen, then started. The
+  // accepted enquiry itself is counted by the server, not here. One
+  // reference per submission makes a retried request harmless.
+  const formRef = useRef(null);
+  const submissionRef = useRef(uuid());
+  useEffect(() => {
+    const el = formRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        trackEvent("form_view", { form: "enquiry" }, "enquiry-view");
+        io.disconnect();
+      }
+    }, { threshold: 0.4 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [status]);
+
   const valid =
     form.full_name.trim() &&
     /\S+@\S+\.\S+/.test(form.email) &&
@@ -33,7 +53,8 @@ export default function Enquiry({ topic } = {}) {
     setStatus("loading");
     setError("");
     try {
-      await submitEnquiry(form);
+      await submitEnquiry(form, submissionRef.current);
+      submissionRef.current = uuid(); // the next message is a new submission
       setStatus("success");
       setForm(EMPTY);
     } catch (err) {
@@ -130,7 +151,7 @@ export default function Enquiry({ topic } = {}) {
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div ref={formRef} className="space-y-4" onFocusCapture={() => trackEvent("form_start", { form: "enquiry" }, "enquiry-start")}>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Full name" required value={form.full_name} onChange={update("full_name")} />
                   <Field label="Email address" type="email" required value={form.email} onChange={update("email")} />

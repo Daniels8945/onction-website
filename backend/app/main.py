@@ -9,6 +9,7 @@ from .routers import (
     admin_users,
     analytics,
     auth,
+    cms,
     enquiries,
     events,
     invoices,
@@ -65,6 +66,7 @@ app.include_router(auth.router)
 app.include_router(admin_users.router)
 app.include_router(enquiries.router)
 app.include_router(pages.router)
+app.include_router(cms.router)
 app.include_router(media.router)
 app.include_router(analytics.router)
 app.include_router(news.router)

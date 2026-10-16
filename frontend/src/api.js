@@ -4,11 +4,13 @@ import { getSessionId } from "./lib/session.js";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
-export async function submitEnquiry(payload) {
+// `clientRef` identifies one submission; a retry with the same ref returns
+// the enquiry already saved instead of creating a duplicate.
+export async function submitEnquiry(payload, clientRef) {
   const res = await fetch(`${API_BASE}/api/enquiries`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...payload, session_id: getSessionId() || undefined }),
+    body: JSON.stringify({ ...payload, session_id: getSessionId() || undefined, client_ref: clientRef }),
   });
 
   if (!res.ok) {

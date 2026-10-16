@@ -8,6 +8,7 @@ import { applyStoredTextSize } from "./components/nav/AccessibilityPanel.jsx";
 import { usePageviewTracking } from "./hooks/usePageviewTracking.js";
 import { AuthProvider } from "./admin/AuthContext.jsx";
 import { VendorAuthProvider } from "./vendor-portal/VendorAuthContext.jsx";
+import { loadContent } from "./cms/load.js";
 import "./index.css";
 
 // Code-split everything admin/dashboard-related (and the dynamic page
@@ -20,6 +21,8 @@ const EventsList = lazy(pageLoaders["/events"]);
 const EventDetail = lazy(() => import("./public/EventDetail.jsx"));
 const Unsubscribe = lazy(() => import("./public/Unsubscribe.jsx"));
 const AboutPage = lazy(pageLoaders["/about"]);
+const LeadershipPage = lazy(pageLoaders["/leadership"]);
+const PublicMediaPage = lazy(pageLoaders["/media"]);
 const SolutionsPage = lazy(pageLoaders["/solutions"]);
 const HowWeTradePage = lazy(pageLoaders["/how-we-trade"]);
 const MarketPage = lazy(pageLoaders["/market"]);
@@ -39,6 +42,9 @@ const AnalyticsPage = lazy(() => import("./admin/pages/AnalyticsPage.jsx"));
 const EnquiriesPage = lazy(() => import("./admin/pages/EnquiriesPage.jsx"));
 const MediaPage = lazy(() => import("./admin/pages/MediaPage.jsx"));
 const PagesListPage = lazy(() => import("./admin/pages/PagesListPage.jsx"));
+const ContentListPage = lazy(() => import("./admin/pages/content/ContentListPage.jsx"));
+const ContentEditorPage = lazy(() => import("./admin/pages/content/ContentEditorPage.jsx"));
+const CoveragePage = lazy(() => import("./admin/pages/content/CoveragePage.jsx"));
 const PageBuilderPage = lazy(() => import("./admin/pages/PageBuilderPage.jsx"));
 const TasksPage = lazy(() => import("./admin/pages/TasksPage.jsx"));
 const TeamPage = lazy(() => import("./admin/pages/TeamPage.jsx"));
@@ -83,6 +89,8 @@ function MainSiteRoutes() {
         <Route element={<SiteLayout />}>
           <Route path="/" element={<App />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/leadership" element={<LeadershipPage />} />
+          <Route path="/media" element={<PublicMediaPage />} />
           <Route path="/solutions" element={<SolutionsPage />} />
           <Route path="/how-we-trade" element={<HowWeTradePage />} />
           <Route path="/market" element={<MarketPage />} />
@@ -116,6 +124,9 @@ function MainSiteRoutes() {
           <Route path="tasks" element={<TasksPage />} />
           <Route path="enquiries" element={<EnquiriesPage />} />
           <Route path="media" element={<MediaPage />} />
+          <Route path="content" element={<ContentListPage />} />
+          <Route path="content/coverage" element={<CoveragePage />} />
+          <Route path="content/:key" element={<ContentEditorPage />} />
           <Route path="pages" element={<PagesListPage />} />
           <Route path="pages/:id" element={<PageBuilderPage />} />
           <Route path="news" element={<NewsListPage />} />
@@ -183,7 +194,8 @@ window.addEventListener("vite:preloadError", (event) => {
   window.location.reload();
 });
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+function render() {
+  ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       {IS_VENDOR_SUBDOMAIN ? (
@@ -197,4 +209,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       )}
     </BrowserRouter>
   </React.StrictMode>
-);
+  );
+}
+
+// The public site waits briefly for dashboard-managed content (cms/load.js
+// falls back to the built-in content if the API is slow or down); the
+// dashboard and the vendor portal don't need it.
+const isPublicSite = !IS_VENDOR_SUBDOMAIN && !window.location.pathname.startsWith("/admin");
+(isPublicSite ? loadContent() : Promise.resolve()).finally(render);

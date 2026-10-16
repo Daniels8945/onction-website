@@ -10,50 +10,25 @@ import { useInView } from "../motion/useInView.js";
 import { useReducedMotion } from "../motion/motionPreference.js";
 import { usePageMeta } from "../hooks/usePageMeta.js";
 import { capability, highlights } from "../data/content.js";
+import { pageCopy } from "../data/pages.js";
 import { Arrow, Check } from "../components/icons.jsx";
 
 import pylonsImg from "../../assets/fre-sonneveld-q6n8nIrDQHE-unsplash.jpg";
 import marketImg from "../../assets/site/aerial-network.jpg";
 
-// The journey of a megawatt through Onction. Each step restates what the
-// company already says about itself (content.js) — the page's job is to put
-// those claims in the order the electricity actually travels.
-const STEPS = [
-  {
-    title: "It starts at the plant",
-    body: "Gas-fired power stations and solar, wind and hydro projects generate electricity. We give them a route to market — contracting their output so capacity doesn't sit idle and renewable production reaches buyers.",
-  },
-  {
-    title: "Our desk matches supply to demand",
-    body: "The trading desk aggregates supply and demand and structures the deal: long, medium or short-term contracts, bilateral or exchange-style, with banking and swap arrangements where positions need balancing.",
-  },
-  {
-    title: "Scheduled onto the grid, around the clock",
-    body: "Power travels over the transmission network to where it's needed. Our 24/7 desk handles scheduling, regulatory compliance and real-time transaction monitoring so every megawatt is delivered as contracted.",
-  },
-  {
-    title: "Delivered to the people who need it",
-    body: "Utilities and large commercial and industrial consumers receive dependable supply at competitive tariffs — backed by sound controls and timely commercial settlement.",
-  },
-  {
-    title: "And across borders",
-    body: "As a participant in the West African Power Pool, we trade across the region's interconnectors — moving surplus to where demand is, and balancing seasonal positions between neighbouring markets.",
-  },
-];
+// The journey of a megawatt through Onction: five steps, in the order the
+// electricity actually travels. Words in data/pages.js; each step lines up
+// with a stage of the EnergyLandscape illustration.
+const steps = () => pageCopy["how-we-trade"].steps;
 
-// Capability line → the solution that delivers it.
-const WAYS = [
-  { text: capability.items[0], to: "exchange-and-bilateral-transactions" },
-  { text: capability.items[1], to: "cross-border-and-wapp-trading" },
-  { text: capability.items[2], to: "power-banking-and-swaps" },
-  { text: capability.items[3], to: "renewable-energy-solutions" },
-  { text: capability.items[4], to: "exchange-and-bilateral-transactions" },
-];
+// Capability line → the solution that delivers it (order matches capability.items).
+const WAY_TARGETS = ["exchange-and-bilateral-transactions", "cross-border-and-wapp-trading", "power-banking-and-swaps", "renewable-energy-solutions", "exchange-and-bilateral-transactions"];
+const ways = () => capability.items.map((text, i) => ({ text, to: WAY_TARGETS[i] || "" }));
 
 function PinnedStory() {
-  const [ref, step] = useScrollProgress({ steps: STEPS.length });
+  const [ref, step] = useScrollProgress({ steps: steps().length });
   return (
-    <section ref={ref} className="relative hidden bg-navy-950 text-white lg:block" style={{ height: `${STEPS.length * 90 + 60}vh` }} aria-label="The journey of a megawatt">
+    <section ref={ref} className="relative hidden bg-navy-950 text-white lg:block" style={{ height: `${steps().length * 90 + 60}vh` }} aria-label="The journey of a megawatt">
       <div className="sticky top-0 flex h-screen h-svh flex-col overflow-hidden">
         <div className="pointer-events-none absolute inset-0 opacity-[0.08]" aria-hidden="true"
           style={{ backgroundImage: "linear-gradient(to right,rgba(255,255,255,.2) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.12) 1px,transparent 1px)", backgroundSize: "64px 64px" }} />
@@ -62,7 +37,7 @@ function PinnedStory() {
           <div>
             <p className="eyebrow-light mb-6">The journey of a megawatt</p>
             <div className="relative min-h-[300px]">
-              {STEPS.map((s, i) => (
+              {steps().map((s, i) => (
                 <div
                   key={s.title}
                   aria-hidden={i !== step}
@@ -70,7 +45,7 @@ function PinnedStory() {
                     i === step ? "translate-y-0 opacity-100" : i < step ? "-translate-y-6 opacity-0" : "translate-y-6 opacity-0"
                   }`}
                 >
-                  <p className="font-outfit text-sm text-teal-400">{String(i + 1).padStart(2, "0")} / {String(STEPS.length).padStart(2, "0")}</p>
+                  <p className="font-outfit text-sm text-teal-400">{String(i + 1).padStart(2, "0")} / {String(steps().length).padStart(2, "0")}</p>
                   <h2 className="mt-3 font-syne text-3xl font-medium leading-tight xl:text-4xl">{s.title}</h2>
                   <p className="mt-5 leading-relaxed text-white/70">{s.body}</p>
                 </div>
@@ -82,7 +57,7 @@ function PinnedStory() {
                 <div className="h-px origin-left bg-teal-400" style={{ transform: "scaleX(var(--p, 0))" }} />
               </div>
               <ol className="mt-3 flex justify-between font-outfit text-xs text-white/40">
-                {STEPS.map((s, i) => (
+                {steps().map((s, i) => (
                   <li key={s.title} className={`transition-colors duration-400 ${i <= step ? "text-teal-400" : ""}`}>{String(i + 1).padStart(2, "0")}</li>
                 ))}
               </ol>
@@ -126,7 +101,7 @@ function usePlayedStory(enabled) {
       const p = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2; // ease in-out
       el.style.setProperty("--p", p.toFixed(4));
       if (panning) scroller.scrollLeft = p * (scroller.scrollWidth - scroller.clientWidth);
-      setStep(t === 1 ? -1 : Math.min(STEPS.length - 1, Math.floor(p * STEPS.length)));
+      setStep(t === 1 ? -1 : Math.min(steps().length - 1, Math.floor(p * steps().length)));
       if (t < 1) frame = requestAnimationFrame(tick);
     }
     frame = requestAnimationFrame(tick);
@@ -156,7 +131,7 @@ function StackedStory({ always = false }) {
         </div>
         <p className="mt-2 text-xs text-white/40">Swipe to see the full picture</p>
         <ol className="mt-10 space-y-8 border-l border-teal-500/40 pl-6">
-          {STEPS.map((s, i) => (
+          {steps().map((s, i) => (
             <Reveal as="li" key={s.title} className="relative">
               <span className="absolute -left-[31px] top-1 h-2.5 w-2.5 rounded-full bg-teal-400" aria-hidden="true" />
               <p className="font-outfit text-sm text-teal-400">{String(i + 1).padStart(2, "0")}</p>
@@ -173,15 +148,16 @@ function StackedStory({ always = false }) {
 export default function HowWeTradePage() {
   const reduced = useReducedMotion();
   usePageMeta("How we trade", "How electricity moves from generators, through Onction's 24/7 trading desk, to utilities, industry and across West Africa.");
+  const copy = pageCopy["how-we-trade"];
 
   return (
     <main>
       <InnerHero
         crumb="How we trade"
-        title="How we move power across West Africa"
-        accent="move power"
-        intro={capability.body}
-        image={pylonsImg}
+        title={copy.hero.title}
+        accent={copy.hero.accent}
+        intro={copy.hero.intro || capability.body}
+        image={copy.hero.image || pylonsImg}
       />
 
       {/* The pinned, panning scene is skipped entirely for reduced motion */}
@@ -195,9 +171,9 @@ export default function HowWeTradePage() {
       {/* Ways we transact → solutions */}
       <section className="bg-white">
         <div className="wrap grid gap-12 py-20 sm:py-24 lg:grid-cols-[1fr_1.1fr] lg:items-start">
-          <SectionTitle eyebrow={capability.eyebrow} title="The arrangements behind every trade" accent="every trade" intro="Flexible purchase and sale arrangements keep supply diversified and dependable. Each one maps to a service you can engage us for." />
+          <SectionTitle eyebrow={copy.ways.eyebrow || capability.eyebrow} title={copy.ways.title} accent={copy.ways.accent} intro={copy.ways.intro} />
           <ul className="divide-y divide-black/10 border-y border-black/10">
-            {WAYS.map((w, i) => (
+            {ways().map((w, i) => (
               <Reveal as="li" key={w.text} delay={i * 70}>
                 <Link to={`/solutions#${w.to}`} className="group flex items-center gap-5 py-5">
                   <span className="font-outfit text-sm text-teal-600">{String(i + 1).padStart(2, "0")}</span>
@@ -219,7 +195,7 @@ export default function HowWeTradePage() {
                 24<span className="text-teal-500">/</span>7
               </p>
             </Reveal>
-            <SectionTitle className="mt-4" title="A desk that never closes" accent="never closes" intro="Electricity is traded, scheduled and delivered in real time. Our desk is staffed for exactly that." />
+            <SectionTitle className="mt-4" eyebrow={copy.desk.eyebrow} title={copy.desk.title} accent={copy.desk.accent} intro={copy.desk.intro} />
           </div>
           <ul className="grid gap-4 sm:grid-cols-2">
             {highlights.items.slice(1, 5).map((h, i) => (
@@ -233,7 +209,7 @@ export default function HowWeTradePage() {
         </div>
       </section>
 
-      <PageEnd next={{ title: "Our market: the West African Power Pool", to: "/market", image: marketImg, summary: "Fourteen nations, one regional electricity market." }} />
+      <PageEnd next={{ ...copy.next, to: "/market", image: marketImg }} />
     </main>
   );
 }

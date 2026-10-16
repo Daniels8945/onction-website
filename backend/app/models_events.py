@@ -34,6 +34,8 @@ class Registration(SQLModel, table=True):
     utm_medium: Optional[str] = Field(default=None, max_length=200)
     utm_campaign: Optional[str] = Field(default=None, max_length=200)
     referrer_category: Optional[str] = Field(default=None, max_length=20)
+    session_id: Optional[str] = Field(default=None, max_length=100, index=True)  # analytics visit (anonymous)
+    landing_path: Optional[str] = Field(default=None, max_length=200)
 
 
 # --- API payload/response shapes -------------------------------------------

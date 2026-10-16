@@ -6,16 +6,21 @@ import Enquiry from "../components/Enquiry.jsx";
 import { usePageMeta } from "../hooks/usePageMeta.js";
 import { company } from "../data/content.js";
 import { vendorPortalUrl } from "../data/site.js";
+import { pageCopy } from "../data/pages.js";
 import { Arrow, Mail, Phone, Pin } from "../components/icons.jsx";
 
 import pylonsImg from "../../assets/fre-sonneveld-q6n8nIrDQHE-unsplash.jpg";
 
-// Routes each kind of visitor to the right channel before the form.
-const ROUTES = [
-  { title: "Generation, offtake & trading", body: "Selling power, buying power, or structuring a deal — the form below goes straight to the trading desk.", href: "#enquire", cta: "Send an enquiry" },
-  { title: "Urgent or time-sensitive", body: "The trading desk operates around the clock.", href: `tel:${company.phoneHref}`, cta: company.phone },
-  { title: "Suppliers & vendors", body: "Invoices, documents and registration are handled in the vendor portal.", href: "vendor-portal", cta: "Open the vendor portal" },
-];
+// Routes each kind of visitor to the right channel before the form. The
+// words are editable (data/pages.js); where each card leads is not.
+const routes = () => {
+  const [enquire, urgent, vendors] = pageCopy.contact.routes;
+  return [
+    { ...enquire, href: "#enquire" },
+    { ...urgent, href: `tel:${company.phoneHref}`, cta: company.phone },
+    { ...vendors, href: "vendor-portal" },
+  ];
+};
 
 const mapsUrl = (lines) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lines.join(" "))}`;
 
@@ -23,14 +28,15 @@ export default function ContactPage() {
   usePageMeta("Contact", "Enquire with Onction Energy's trading desk in Lagos or Abuja.");
   const [params] = useSearchParams();
   const topic = params.get("topic") || undefined;
+  const copy = pageCopy.contact;
 
   return (
     <main>
-      <InnerHero crumb="Contact" title="Talk to our trading desk" accent="trading desk" intro="Tell us about your generation, offtake or trading needs. We'll route you to the right person." image={pylonsImg} compact />
+      <InnerHero crumb="Contact" title={copy.hero.title} accent={copy.hero.accent} intro={copy.hero.intro} image={copy.hero.image || pylonsImg} compact />
 
       <section className="bg-mist">
         <div className="wrap grid gap-4 py-12 md:grid-cols-3">
-          {ROUTES.map((r, i) => (
+          {routes().map((r, i) => (
             <Reveal key={r.title} delay={i * 80}>
               <a
                 href={r.href === "vendor-portal" ? vendorPortalUrl() : r.href}
@@ -51,7 +57,7 @@ export default function ContactPage() {
 
       <section id="offices" className="scroll-mt-20 bg-navy-950 text-white">
         <div className="wrap py-20 sm:py-24">
-          <SectionTitle light eyebrow="Our offices" title="Lagos and Abuja" accent="Abuja" />
+          <SectionTitle light eyebrow={copy.offices.eyebrow} title={copy.offices.title} accent={copy.offices.accent} />
           <div className="mt-12 grid gap-5 md:grid-cols-2">
             {company.offices.map((o, i) => (
               <Reveal key={o.label} delay={i * 100} className="border border-white/10 bg-white/[0.04] p-8">
