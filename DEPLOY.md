@@ -81,6 +81,47 @@ build or container needed for the subdomain.
 4. Note your region's S3 endpoint (shown in the control panel, looks like
    `https://usc1.contabostorage.com`) — that's `S3_ENDPOINT_URL`.
 
+### 4b) Alternative: InterServer storage hosting
+
+InterServer's storage hosting is not real S3. It has a simple file API that
+uses an FTP account's login, so the app talks to it through its own adapter
+(`backend/app/storage.py`) and serves files to browsers at `/api/files/...`.
+
+1. In DirectAdmin → FTP Management, create an FTP account whose root
+   directory is the storage folder (e.g. `.../st87322.ispot.cc/api_storage`).
+   The API can only see inside that folder.
+2. Inside it, create the app's folder (default `onction-documents`). The app
+   creates `onction-documents/uploads/` itself on the first upload.
+3. In `.env`:
+
+   ```
+   STORAGE_BACKEND=interserver
+   INTERSERVER_URL=https://storage4500.is.cc:8080
+   INTERSERVER_USER=apiwebstorage@st87322.ispot.cc
+   INTERSERVER_PASSWORD=<the FTP password>
+   INTERSERVER_BASE_SUBPATH=onction-documents
+   ```
+
+4. Check it — on the VPS, inside the running container (it uses the same
+   settings the app does):
+
+   ```bash
+   docker compose exec backend python -m scripts.check_storage
+   ```
+
+   It should end with `OK - storage is working`. (Locally, outside Docker:
+   `cd backend && python -m scripts.check_storage`.)
+
+**Who can open what.** Media-library images are public (unguessable
+addresses, cached by browsers for a year). Vendor documents are private: the
+dashboard and vendor portal get a signed link that works for 2 hours and only
+for that document; without a valid signature `/api/files/...` returns 403.
+Signatures use `JWT_SECRET`, so changing it invalidates any links already
+handed out (people just reopen the document).
+
+Switching back to Contabo is just `STORAGE_BACKEND=s3` plus the `S3_*`
+values. Files already uploaded stay where they were uploaded and are not moved.
+
 ## 5) Email (SMTP) — registrations, invoices, newsletters, admin alerts
 
 Decision made: sending through your existing **cPanel/hosting-provided email

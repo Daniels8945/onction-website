@@ -12,6 +12,7 @@ from .routers import (
     cms,
     enquiries,
     events,
+    files,
     invoices,
     media,
     news,
@@ -68,6 +69,7 @@ app.include_router(enquiries.router)
 app.include_router(pages.router)
 app.include_router(cms.router)
 app.include_router(media.router)
+app.include_router(files.router)
 app.include_router(analytics.router)
 app.include_router(news.router)
 app.include_router(events.router)

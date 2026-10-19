@@ -51,8 +51,10 @@ export default function MediaPage() {
     }
   }
 
+  // Files may be served from this site (/api/files/…, relative); a copied link
+  // is pasted elsewhere (emails, posts), so always copy the full address.
   function copyUrl(url) {
-    navigator.clipboard?.writeText(url);
+    navigator.clipboard?.writeText(new URL(url, window.location.origin).href);
     toast.success("URL copied to clipboard.");
   }
 

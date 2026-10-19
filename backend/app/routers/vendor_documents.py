@@ -10,7 +10,7 @@ from ..models_admin import AdminUser
 from ..models_vendor_documents import VendorDocument, VendorDocumentRead, VendorDocumentStatusUpdate
 from ..models_vendors import Vendor
 from ..security import get_current_identity, require_role
-from ..storage import build_public_url, delete_from_bucket, upload_to_bucket
+from ..storage import build_private_url, delete_from_bucket, upload_to_bucket
 from ..vendor_platform_utils import get_platform_settings, log_audit, notify_admins, notify_vendor, send_notification_email
 
 router = APIRouter(prefix="/api/vendor-platform/documents", tags=["vendor-platform"])
@@ -20,7 +20,9 @@ VALID_STATUSES = {"Pending Review", "Approved", "Rejected"}
 
 
 def _to_read(document: VendorDocument) -> VendorDocumentRead:
-    file_url = build_public_url(document.storage_key) if document.storage_key else None
+    # Vendor documents are private: a short-lived signed link, only ever returned
+    # to an admin or the vendor who owns the document (see the routes below).
+    file_url = build_private_url(document.storage_key) if document.storage_key else None
     return VendorDocumentRead(**document.model_dump(), file_url=file_url)
 
 

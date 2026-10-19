@@ -6,6 +6,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
+# Operational checks, e.g. `docker compose exec backend python -m scripts.check_storage`
+COPY scripts ./scripts
 
 EXPOSE 8000
 

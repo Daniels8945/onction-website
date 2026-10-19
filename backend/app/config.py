@@ -32,6 +32,19 @@ class Settings(BaseSettings):
     admin_email: str = "admin@onctionenergy.com"
     admin_password: str = DEV_ADMIN_PASSWORD
 
+    # --- File storage -------------------------------------------------------
+    # "s3" = Contabo Object Storage / any S3-compatible bucket (settings below).
+    # "interserver" = InterServer storage hosting file API (INTERSERVER_* below).
+    storage_backend: str = "s3"
+
+    # InterServer storage hosting: the FTP account's login is the API login, and
+    # the API is sandboxed to that account's root directory.
+    interserver_url: str = ""  # e.g. https://storage4500.is.cc:8080
+    interserver_user: str = ""  # e.g. apiwebstorage@st87322.ispot.cc
+    interserver_password: str = ""
+    # Folder (relative to the FTP root) that holds this app's files.
+    interserver_base_subpath: str = "onction-documents"
+
     # --- Object storage (Contabo Object Storage / any S3-compatible) -------
     s3_endpoint_url: str = ""  # e.g. https://usc1.contabostorage.com
     s3_region: str = "us-central-1"
