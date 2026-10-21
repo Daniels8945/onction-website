@@ -11,6 +11,10 @@ import FieldEditor from "../../content/FieldEditor.jsx";
 import { diffContent } from "../../content/diff.js";
 import { STATUS, useSchema } from "../../content/useSchema.js";
 import { builtIn } from "../../../cms/registry.js";
+import HelpLink from "../../components/HelpLink.jsx";
+
+// The Help Centre guide for a content area: a specific one where it exists.
+const helpTopicFor = (key) => (key === "leadership.people" ? "leadership" : key === "media.library" ? "media-gallery" : key.startsWith("partners.") ? "partners" : "website-content");
 
 const fmt = (d) => (d ? new Date(d.endsWith?.("Z") ? d : `${d}Z`).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "—");
 const slug = (t = "") => t.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -227,6 +231,7 @@ export default function ContentEditorPage() {
         }
         actions={
           <>
+            <HelpLink topic={helpTopicFor(key)} />
             <Button icon={LuHistory} onClick={openHistory}>History</Button>
             <Button icon={LuEye} onClick={() => preview(coll.used_on[0].path)}>Preview</Button>
             {canEdit && <Button icon={LuSave} onClick={() => saveDraft()} loading={busy === "save"} disabled={!dirty}>Save draft</Button>}

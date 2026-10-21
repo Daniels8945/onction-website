@@ -114,3 +114,9 @@ def require_role(*roles: str):
         return admin
 
     return _check
+
+
+# Who may change website content (news, events, newsletter, media). Viewers can
+# read everything in the dashboard but not change it — the same rule as the CMS.
+EDITOR_ROLES = ("Super Admin", "Admin")
+require_editor = require_role(*EDITOR_ROLES)

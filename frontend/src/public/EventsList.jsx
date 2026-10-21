@@ -4,6 +4,7 @@ import InnerHero from "../components/page/InnerHero.jsx";
 import Reveal from "../components/Reveal.jsx";
 import { pageCopy } from "../data/pages.js";
 import { usePageMeta } from "../hooks/usePageMeta.js";
+import { formatDateTime } from "../lib/dates.js";
 import handshakeImg from "../../assets/cytonn-photography-vWchRczcQwM-unsplash.jpg";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
@@ -42,7 +43,8 @@ export default function EventsList() {
                   <p className="eyebrow mb-1">{ev.category}</p>
                   <h2 className="font-syne text-xl font-semibold text-ink">{ev.title}</h2>
                   <p className="mt-1 text-sm text-slatey">
-                    {new Date(ev.starts_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })} · {ev.location}
+                    {formatDateTime(ev.starts_at)}
+                    {ev.location && ` · ${ev.location}`}
                   </p>
                 </div>
                 <span className={`shrink-0 px-3 py-1 text-xs font-medium ${full ? "bg-black/5 text-slatey" : "bg-teal-100 text-teal-700"}`}>

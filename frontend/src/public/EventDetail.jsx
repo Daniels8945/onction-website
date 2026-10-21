@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getSessionId } from "../lib/session.js";
 import { trackEvent } from "../lib/trackPageview.js";
+import DraftNotice from "../components/content/DraftNotice.jsx";
+import { formatDateTime } from "../lib/dates.js";
+import { fetchPublicOrPreview } from "../lib/previewFetch.js";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
@@ -70,12 +73,8 @@ export default function EventDetail() {
   useEffect(() => {
     setEvent(null);
     setNotFound(false);
-    fetch(`${API_BASE}/api/events/public/${slug}`)
-      .then((res) => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
-      .then(setEvent)
+    fetchPublicOrPreview(`/api/events/public/${slug}`, `/api/events/preview/${slug}`)
+      .then(({ data }) => setEvent(data))
       .catch(() => setNotFound(true));
   }, [slug]);
 
@@ -97,14 +96,21 @@ export default function EventDetail() {
   return (
     <>
       <main className="wrap max-w-3xl pb-20 pt-[calc(clamp(64px,7.5vw,91px)+3rem)]">
+        {event.status === "draft" && <DraftNotice kind="event" />}
         <p className="eyebrow mb-2">{event.category}</p>
         <h1 className="font-syne text-3xl font-semibold text-ink md:text-4xl">{event.title}</h1>
         <p className="mt-3 text-sm text-slatey">
-          {new Date(event.starts_at).toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })}
+          {formatDateTime(event.starts_at, { dateStyle: "full", timeStyle: "short" })}
           {event.location && ` · ${event.location}`}
         </p>
         {event.cover_image_url && <img src={event.cover_image_url} alt="" className="my-8 w-full" />}
-        {event.description && <p className="mb-8 text-slatey">{event.description}</p>}
+        {event.description && (
+          <div className="mb-8 space-y-4 text-slatey">
+            {event.description.split("\n").filter((line) => line.trim()).map((line, i) => (
+              <p key={i}>{line}</p>
+            ))}
+          </div>
+        )}
 
         <div className="max-w-md">
           {registeredStatus === "registered" && (
@@ -117,7 +123,10 @@ export default function EventDetail() {
               This event is full — you've been added to the waitlist and we'll email you if a spot opens up.
             </div>
           )}
-          {!registeredStatus && (
+          {event.status === "draft" && (
+            <p className="border border-black/10 bg-mist px-4 py-3 text-sm text-slatey">The registration form appears here once the event is published.</p>
+          )}
+          {event.status !== "draft" && !registeredStatus && (
             <>
               <p className="eyebrow mb-3">{isFull ? "Join the waitlist" : "Register"}</p>
               <RegistrationForm slug={slug} onRegistered={setRegisteredStatus} />

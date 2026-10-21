@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { adminApi } from "../lib/adminApi.js";
 import { useConfirmDialog } from "../hooks/useConfirmDialog.jsx";
+import { useCanManage } from "../lib/useCanManage.js";
+import { checkImageFile } from "../lib/imageRules.js";
+import HelpLink from "../components/HelpLink.jsx";
 
 export default function MediaPage() {
   const [assets, setAssets] = useState(null);
@@ -9,6 +12,7 @@ export default function MediaPage() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
+  const canManage = useCanManage();
 
   function loadAssets() {
     adminApi
@@ -22,6 +26,12 @@ export default function MediaPage() {
   async function handleFileChange(e) {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
+    const problem = files.map((f) => (f.type.startsWith("image/") ? checkImageFile(f) : null)).find(Boolean);
+    if (problem) {
+      toast.error(problem);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
     setUploading(true);
     try {
       for (const file of files) {
@@ -40,7 +50,12 @@ export default function MediaPage() {
   }
 
   async function handleDelete(id) {
-    const ok = await confirm({ title: "Delete this file?", message: "This can't be undone.", confirmLabel: "Delete", destructive: true });
+    const ok = await confirm({
+      title: "Delete this file?",
+      message: "It's removed from storage permanently. Any page, article, event or email still using it will show a missing image.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
     if (!ok) return;
     try {
       await adminApi.del(`/api/media/${id}`);
@@ -64,8 +79,11 @@ export default function MediaPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 font-syne text-2xl font-semibold text-ink">Media library</h1>
-          <p className="text-sm text-slatey">Images and videos uploaded to object storage.</p>
+          <p className="text-sm text-slatey">Every image and video uploaded to the site. Files uploaded from the News, Events, Newsletter and Website content editors land here too.</p>
         </div>
+        <div className="flex items-center gap-2">
+        <HelpLink topic="media" />
+        {canManage && (
         <label className="btn-primary cursor-pointer">
           {uploading ? "Uploading…" : "Upload files"}
           <input
@@ -78,6 +96,8 @@ export default function MediaPage() {
             onChange={handleFileChange}
           />
         </label>
+        )}
+        </div>
       </div>
 
       {error && (
@@ -110,12 +130,14 @@ export default function MediaPage() {
                 >
                   Copy URL
                 </button>
-                <button
-                  onClick={() => handleDelete(asset.id)}
-                  className="border border-black/10 px-2 py-1 text-[11px] font-medium text-red-600 hover:border-red-400"
-                >
-                  Delete
-                </button>
+                {canManage && (
+                  <button
+                    onClick={() => handleDelete(asset.id)}
+                    className="border border-black/10 px-2 py-1 text-[11px] font-medium text-red-600 hover:border-red-400"
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           ))}

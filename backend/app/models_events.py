@@ -64,6 +64,8 @@ class EventUpdate(SQLModel):
     cover_image_url: Optional[str] = None
     capacity: Optional[int] = Field(default=None, ge=1)
     status: Optional[str] = None
+    # The updated_at the editor loaded; a mismatch means someone else saved.
+    expected_updated_at: Optional[datetime] = None
 
 
 class EventRead(SQLModel):
@@ -78,6 +80,7 @@ class EventRead(SQLModel):
     cover_image_url: Optional[str]
     capacity: Optional[int]
     status: str
+    updated_at: datetime
     registered_count: int = 0
     waitlisted_count: int = 0
 

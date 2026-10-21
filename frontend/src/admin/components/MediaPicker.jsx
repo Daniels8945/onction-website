@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { LuCheck, LuImage, LuUpload, LuVideo } from "react-icons/lu";
 import { adminApi } from "../lib/adminApi.js";
 import { Button, EmptyState, Modal, SearchInput, Skeleton, cx } from "./ui.jsx";
+import { checkImageFile, IMAGE_TYPES } from "../lib/imageRules.js";
 
 // Browse the Media library (or upload into it) and pick one asset's URL.
 // `kind` narrows the grid to "image" or "video" content types.
@@ -30,6 +31,11 @@ export default function MediaPicker({ kind = "image", currentUrl, onSelect, onCl
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    const problem = kind === "image" ? checkImageFile(file) : null;
+    if (problem) {
+      toast.error(problem);
+      return;
+    }
     setUploading(true);
     try {
       const data = new FormData();
@@ -64,7 +70,7 @@ export default function MediaPicker({ kind = "image", currentUrl, onSelect, onCl
     >
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <SearchInput value={search} onChange={setSearch} placeholder="Search by file name…" className="flex-1" />
-        <input ref={fileRef} type="file" accept={`${kind}/*`} className="hidden" onChange={handleUpload} />
+        <input ref={fileRef} type="file" accept={kind === "image" ? IMAGE_TYPES.join(",") : `${kind}/*`} className="hidden" onChange={handleUpload} />
         <Button icon={LuUpload} loading={uploading} onClick={() => fileRef.current?.click()}>
           {uploading ? "Uploading…" : "Upload new"}
         </Button>

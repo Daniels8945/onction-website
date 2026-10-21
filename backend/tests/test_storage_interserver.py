@@ -84,7 +84,7 @@ def fake(monkeypatch):
     return server
 
 
-def _upload(client, token, name="logo.png", content=b"\x89PNG fake", ctype="image/png"):
+def _upload(client, token, name="logo.png", content=b"\x89PNG\r\n\x1a\n fake", ctype="image/png"):
     return client.post(
         "/api/media",
         headers={"Authorization": f"Bearer {token}"},
@@ -102,12 +102,12 @@ def test_upload_serve_and_delete_roundtrip(client, admin_token, fake):
     # Stored under the base folder, in an uploads/ folder created on demand.
     assert "onction-documents/uploads" in fake.dirs
     stored = asset["key"].split("/", 1)[1]
-    assert fake.files[f"onction-documents/uploads/{stored}"] == b"\x89PNG fake"
+    assert fake.files[f"onction-documents/uploads/{stored}"] == b"\x89PNG\r\n\x1a\n fake"
 
     # Served through the backend with the right type and caching.
     f = client.get(asset["url"])
     assert f.status_code == 200
-    assert f.content == b"\x89PNG fake"
+    assert f.content == b"\x89PNG\r\n\x1a\n fake"
     assert f.headers["content-type"] == "image/png"
     assert "immutable" in f.headers["cache-control"]
 

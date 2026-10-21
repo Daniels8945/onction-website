@@ -6,6 +6,7 @@ import { adminApi } from "../lib/adminApi.js";
 import { usePromptDialog } from "../hooks/usePromptDialog.jsx";
 import { useConfirmDialog } from "../hooks/useConfirmDialog.jsx";
 import { relativeTime, formatDateTime } from "../lib/format.js";
+import HelpLink from "../components/HelpLink.jsx";
 import { Alert, Badge, Button, EmptyState, ListSkeleton, Menu, PageHeader, Panel, SearchInput, Table, Tabs, Td, Th } from "../components/ui.jsx";
 
 function slugify(title) {
@@ -108,9 +109,12 @@ export default function PagesListPage() {
         title="Pages"
         description="Build and publish pages beyond the landing page."
         actions={
-          <Button variant="primary" icon={LuPlus} onClick={handleCreate} loading={creating}>
-            New page
-          </Button>
+          <>
+            <HelpLink topic="campaign-pages" />
+            <Button variant="primary" icon={LuPlus} onClick={handleCreate} loading={creating}>
+              New page
+            </Button>
+          </>
         }
       />
 

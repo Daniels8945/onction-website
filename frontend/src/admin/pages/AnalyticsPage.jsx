@@ -6,6 +6,7 @@ import { adminApi } from "../lib/adminApi.js";
 import { Alert, Badge, Button, Panel, Select, Skeleton, Switch, Tabs, cx } from "../components/ui.jsx";
 import { Bars, DataTable, Definition, MetricCard, Rate, TrendChart, fmtDur, fmtInt, fmtPct } from "../analytics/parts.jsx";
 import { pages as sitePages } from "../../data/site.js";
+import HelpLink from "../components/HelpLink.jsx";
 
 // Analytics: website performance, behaviour, content, acquisition and leads.
 // Every number comes from GET /api/analytics/report, computed on the server
@@ -120,6 +121,7 @@ export default function AnalyticsPage() {
           <p className="mt-1 max-w-2xl text-sm text-slatey">How the public website performs — visits, behaviour, content, where visitors come from, and the enquiries it produces.</p>
         </div>
         <div className="flex items-center gap-2">
+          <HelpLink topic="analytics" />
           <Button size="sm" icon={LuRefreshCw} onClick={load} loading={state === "refreshing"}>Refresh</Button>
           <ExportMenu tab={tab} onExport={exportCsv} disabled={!data} />
         </div>

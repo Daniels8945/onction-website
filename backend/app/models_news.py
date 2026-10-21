@@ -41,6 +41,8 @@ class PostUpdate(SQLModel):
     cover_image_url: Optional[str] = None
     body: Optional[str] = None
     status: Optional[str] = None
+    # The updated_at the editor loaded; a mismatch means someone else saved.
+    expected_updated_at: Optional[datetime] = None
 
 
 class PostRead(SQLModel):
@@ -65,3 +67,4 @@ class PostListItem(SQLModel):
     cover_image_url: Optional[str]
     status: str
     published_at: Optional[datetime]
+    updated_at: datetime

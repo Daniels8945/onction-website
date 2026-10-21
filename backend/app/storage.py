@@ -53,14 +53,54 @@ def _backend() -> str:
     return (settings.storage_backend or "s3").strip().lower()
 
 
+MAX_IMAGE_BYTES = 10 * 1024 * 1024  # photos for the website; larger files are almost always uncompressed originals
+
+
+def _matches_signature(content_type: str, body: bytes) -> bool:
+    """The browser-supplied content type is only a claim (it comes from the
+    file extension), so check the file's own leading bytes agree with it."""
+    head = body[:64]
+    if content_type == "image/jpeg":
+        return head.startswith(b"\xff\xd8\xff")
+    if content_type == "image/png":
+        return head.startswith(b"\x89PNG\r\n\x1a\n")
+    if content_type == "image/gif":
+        return head.startswith((b"GIF87a", b"GIF89a"))
+    if content_type == "image/webp":
+        return head[:4] == b"RIFF" and head[8:12] == b"WEBP"
+    if content_type == "image/svg+xml":
+        text = body[:2048].lstrip(b"\xef\xbb\xbf").lstrip().lower()
+        return text.startswith((b"<svg", b"<?xml", b"<!--", b"<!doctype svg")) and b"<svg" in body[:4096].lower()
+    if content_type in ("video/mp4", "video/quicktime"):
+        return head[4:8] in (b"ftyp", b"moov", b"mdat", b"wide", b"free")
+    if content_type == "video/webm":
+        return head.startswith(b"\x1a\x45\xdf\xa3")
+    if content_type == "application/pdf":
+        return head.startswith(b"%PDF-")
+    if content_type == "application/msword":
+        return head.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1")
+    if content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        return head.startswith(b"PK\x03\x04")
+    return False
+
+
 def _validate_upload(file: UploadFile, body: bytes) -> None:
     if file.content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail=f"Unsupported file type: {file.content_type}",
         )
+    if not body:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The file is empty")
     if len(body) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="File too large (max 200MB)")
+    if file.content_type.startswith("image/") and len(body) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Image too large (max 10 MB)")
+    if not _matches_signature(file.content_type, body):
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="The file's contents don't match its type — it may be damaged or renamed",
+        )
 
 
 def _new_key(filename: Optional[str]) -> str:

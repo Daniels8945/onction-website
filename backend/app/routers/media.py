@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 from ..database import get_session
 from ..models_admin import AdminUser
 from ..models_media import MediaAsset, MediaAssetRead
-from ..security import get_current_admin
+from ..security import get_current_admin, require_editor
 from ..storage import delete_from_bucket, upload_to_bucket
 
 router = APIRouter(prefix="/api/media", tags=["media"])
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/media", tags=["media"])
 async def upload_media(
     file: UploadFile = File(...),
     session: Session = Depends(get_session),
-    current: AdminUser = Depends(get_current_admin),
+    current: AdminUser = Depends(require_editor),
 ):
     key, url, size = await upload_to_bucket(file)
     asset = MediaAsset(
@@ -44,7 +44,7 @@ def list_media(
 def delete_media(
     asset_id: int,
     session: Session = Depends(get_session),
-    current: AdminUser = Depends(get_current_admin),
+    current: AdminUser = Depends(require_editor),
 ):
     asset = session.get(MediaAsset, asset_id)
     if asset is None:

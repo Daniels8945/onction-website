@@ -4,6 +4,7 @@ import { LuChartColumn, LuChevronRight, LuShieldCheck } from "react-icons/lu";
 import { adminApi } from "../../lib/adminApi.js";
 import { Alert, Badge, Button, EmptyState, ListSkeleton, PageHeader, Panel, SearchInput, Tabs } from "../../components/ui.jsx";
 import { STATUS } from "../../content/useSchema.js";
+import HelpLink from "../../components/HelpLink.jsx";
 
 const AREA_ORDER = ["Homepage", "About & leadership", "Services & solutions", "Pages", "Media & gallery", "Partners & ecosystem", "Contact & company", "Navigation & footer"];
 const fmt = (d) => (d ? new Date(d.endsWith?.("Z") ? d : `${d}Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null);
@@ -52,7 +53,12 @@ export default function ContentListPage() {
       <PageHeader
         title="Website content"
         description="Edit the words, photos and links on the public website. Changes are saved as drafts, previewed on the real page and only go live when you publish them."
-        actions={<Button icon={LuChartColumn} to="/admin/content/coverage">Coverage report</Button>}
+        actions={
+          <>
+            <HelpLink topic="website-content" />
+            <Button icon={LuChartColumn} to="/admin/content/coverage">Coverage report</Button>
+          </>
+        }
       />
       {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
 

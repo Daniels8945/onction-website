@@ -48,6 +48,7 @@ const CoveragePage = lazy(() => import("./admin/pages/content/CoveragePage.jsx")
 const PageBuilderPage = lazy(() => import("./admin/pages/PageBuilderPage.jsx"));
 const TasksPage = lazy(() => import("./admin/pages/TasksPage.jsx"));
 const TeamPage = lazy(() => import("./admin/pages/TeamPage.jsx"));
+const HelpPage = lazy(() => import("./admin/pages/HelpPage.jsx"));
 const NewsListPage = lazy(() => import("./admin/pages/NewsListPage.jsx"));
 const NewsEditorPage = lazy(() => import("./admin/pages/NewsEditorPage.jsx"));
 const EventsListPage = lazy(() => import("./admin/pages/EventsListPage.jsx"));
@@ -135,6 +136,8 @@ function MainSiteRoutes() {
           <Route path="events/:id" element={<EventEditorPage />} />
           <Route path="newsletter" element={<NewsletterPage />} />
           <Route path="team" element={<TeamPage />} />
+          <Route path="help" element={<HelpPage />} />
+          <Route path="help/:topicId" element={<HelpPage />} />
           <Route path="vendors" element={<VendorsListPage />} />
           <Route path="vendors/add" element={<AddVendorPage />} />
           <Route path="vendors/:id" element={<VendorProfilePage />} />

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useMatch } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import {
+  LuBookOpen,
   LuCalendar,
   LuChartLine,
   LuFileText,
@@ -58,7 +59,10 @@ const NAV_SECTIONS = [
   },
   {
     label: "Workspace",
-    items: [{ to: "/admin/team", label: "Team", icon: LuUserCog }],
+    items: [
+      { to: "/admin/team", label: "Team", icon: LuUserCog },
+      { to: "/admin/help", label: "Help & guides", icon: LuBookOpen },
+    ],
   },
 ];
 

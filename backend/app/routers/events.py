@@ -1,6 +1,6 @@
 import csv
 import io
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
 from sqlmodel import Session, delete, func, select
@@ -19,7 +19,8 @@ from ..models_events import (
     RegistrationCreate,
     RegistrationRead,
 )
-from ..security import get_current_admin
+from ..content_rules import bad_request, check_image_url, check_not_stale, check_slug, check_status, check_text
+from ..security import get_current_admin, require_editor
 
 router = APIRouter(prefix="/api/events", tags=["events"])
 settings = get_settings()
@@ -102,6 +103,48 @@ def _send_registration_email(to_email: str, name: str, event_title: str, reg_sta
     try_send_email(to_email, subject, render_shell(body))
 
 
+@router.get("/preview/{slug}", response_model=EventRead)
+def preview_event(
+    slug: str,
+    session: Session = Depends(get_session),
+    current: AdminUser = Depends(get_current_admin),
+):
+    """Staff only: the event as its public page would show it, drafts
+    included. The public endpoints above never return a draft."""
+    event = session.exec(select(Event).where(Event.slug == slug)).first()
+    if event is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+    return _to_read(session, event)
+
+
+def _clean(values: dict) -> dict:
+    if "slug" in values:
+        values["slug"] = check_slug(values["slug"])
+    if "title" in values:
+        values["title"] = check_text(values["title"], "Title")
+    if "category" in values:
+        values["category"] = check_text(values["category"], "Category")[:80]
+    if "status" in values:
+        values["status"] = check_status(values["status"])
+    if "cover_image_url" in values:
+        values["cover_image_url"] = check_image_url(values["cover_image_url"])
+    if "starts_at" in values and values["starts_at"] is None:
+        raise bad_request("A start date and time is required")
+    for when in ("starts_at", "ends_at"):
+        # Stored as naive UTC, like every other timestamp in the app.
+        if values.get(when) is not None and values[when].tzinfo is not None:
+            values[when] = values[when].astimezone(timezone.utc).replace(tzinfo=None)
+    for nullable_text in ("description", "location"):
+        if nullable_text in values and values[nullable_text] is None:
+            values[nullable_text] = ""
+    return values
+
+
+def _check_dates(event: Event) -> None:
+    if event.ends_at is not None and event.ends_at < event.starts_at:
+        raise bad_request("The event can't end before it starts")
+
+
 @router.get("", response_model=list[EventRead])
 def list_events(
     session: Session = Depends(get_session),
@@ -127,12 +170,14 @@ def get_event(
 def create_event(
     payload: EventCreate,
     session: Session = Depends(get_session),
-    current: AdminUser = Depends(get_current_admin),
+    current: AdminUser = Depends(require_editor),
 ):
-    existing = session.exec(select(Event).where(Event.slug == payload.slug)).first()
+    values = _clean(payload.model_dump())
+    existing = session.exec(select(Event).where(Event.slug == values["slug"])).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="An event with this slug already exists")
-    event = Event(**payload.model_dump())
+    event = Event(**values)
+    _check_dates(event)
     session.add(event)
     session.commit()
     session.refresh(event)
@@ -144,18 +189,23 @@ def update_event(
     event_id: int,
     payload: EventUpdate,
     session: Session = Depends(get_session),
-    current: AdminUser = Depends(get_current_admin),
+    current: AdminUser = Depends(require_editor),
 ):
     event = session.get(Event, event_id)
     if event is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This event no longer exists — it may have been deleted")
     updates = payload.model_dump(exclude_unset=True)
-    if "slug" in updates and updates["slug"] != event.slug:
+    check_not_stale(event.updated_at, updates.pop("expected_updated_at", None))
+    if updates.get("slug") == event.slug:
+        updates.pop("slug")  # unchanged: don't re-validate an address that's already live
+    updates = _clean(updates)
+    if "slug" in updates:
         clash = session.exec(select(Event).where(Event.slug == updates["slug"])).first()
         if clash:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="An event with this slug already exists")
     for field, value in updates.items():
         setattr(event, field, value)
+    _check_dates(event)
     event.updated_at = datetime.utcnow()
     session.add(event)
     session.commit()
@@ -167,7 +217,7 @@ def update_event(
 def delete_event(
     event_id: int,
     session: Session = Depends(get_session),
-    current: AdminUser = Depends(get_current_admin),
+    current: AdminUser = Depends(require_editor),
 ):
     event = session.get(Event, event_id)
     if event is None:
@@ -216,7 +266,7 @@ def cancel_registration(
     event_id: int,
     registration_id: int,
     session: Session = Depends(get_session),
-    current: AdminUser = Depends(get_current_admin),
+    current: AdminUser = Depends(require_editor),
 ):
     """Cancels a registration and, if it freed up a confirmed spot, promotes
     the longest-waiting person on the waitlist into it."""

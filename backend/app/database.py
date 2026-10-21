@@ -60,6 +60,9 @@ _NEW_COLUMNS: dict[str, list[tuple[str, str]]] = {
         ("utm_campaign", "VARCHAR(200)"),
         ("referrer_category", "VARCHAR(20)"),
     ],
+    "campaign": [
+        ("image_url", "VARCHAR(1000)"),
+    ],
     "adminuser": [
         # Defaults every existing admin to "Super Admin" so the new vendor-platform
         # role gate (see security.require_role) doesn't lock anyone out on upgrade.

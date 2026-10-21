@@ -4,6 +4,7 @@ import InnerHero from "../components/page/InnerHero.jsx";
 import Reveal from "../components/Reveal.jsx";
 import { pageCopy } from "../data/pages.js";
 import { usePageMeta } from "../hooks/usePageMeta.js";
+import { formatDate } from "../lib/dates.js";
 import chartImg from "../../assets/maxim-hopman-fiXLQXAhCfk-unsplash.jpg";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
@@ -43,7 +44,7 @@ export default function NewsList() {
               <h2 className="font-syne text-lg font-semibold text-ink">{post.title}</h2>
               {post.summary && <p className="mt-2 text-sm text-slatey">{post.summary}</p>}
               {post.published_at && (
-                <p className="mt-3 text-xs text-slatey/70">{new Date(post.published_at).toLocaleDateString()}</p>
+                <p className="mt-3 text-xs text-slatey/70">{formatDate(post.published_at)}</p>
               )}
             </Link>
             </Reveal>
