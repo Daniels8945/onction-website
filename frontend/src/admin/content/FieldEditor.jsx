@@ -183,6 +183,24 @@ function ListField({ field, value = [], onChange, issues, path, ctx, disabled })
   );
 }
 
+// Addresses are locked once saved, since other pages and shared links use them,
+// but can be unlocked on purpose (or automatically when they need fixing).
+function SlugField({ common, field, value, onChange, err, disabled, isNew }) {
+  const [unlocked, setUnlocked] = useState(false);
+  const editable = isNew || unlocked || Boolean(err);
+  const hint = isNew ? field.help : editable ? "Changing this breaks links that already point to the old address." : "Fixed once saved, so links keep working.";
+  const change = !disabled && !editable && (
+    <button type="button" onClick={() => setUnlocked(true)} className="text-xs font-semibold text-teal-700 hover:underline">
+      Change address
+    </button>
+  );
+  return (
+    <Field {...common} error={err} hint={hint} counter={change}>
+      {(p) => <Input {...p} value={value ?? ""} onChange={(e) => onChange(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))} disabled={disabled || !editable} placeholder="set automatically" />}
+    </Field>
+  );
+}
+
 export default function FieldEditor({ field, value, onChange, issues = [], path, ctx, disabled, isNew }) {
   const own = messagesFor(issues, path);
   const err = own.find((i) => i.level === "error")?.message;
@@ -261,12 +279,7 @@ export default function FieldEditor({ field, value, onChange, issues = [], path,
         </Field>
       );
     case "slug":
-      // Addresses are permanent once saved: other pages and shared links use them.
-      return (
-        <Field {...common} error={err} hint={isNew ? field.help : "Fixed once saved, so links keep working."}>
-          {(p) => <Input {...p} value={value ?? ""} onChange={(e) => onChange(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))} disabled={disabled || !isNew} placeholder="set automatically" />}
-        </Field>
-      );
+      return <SlugField common={common} field={field} value={value} onChange={onChange} err={err} disabled={disabled} isNew={isNew} />;
     default: {
       const listId = field.type === "link" || field.type === "route" ? `routes-${field.type}` : undefined;
       return (
