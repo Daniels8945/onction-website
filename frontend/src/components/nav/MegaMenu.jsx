@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { menu, vendorPortalUrl } from "../../data/site.js";
+import { menu, quickLinks, routeIsLive, vendorPortalUrl } from "../../data/site.js";
 import { company } from "../../data/content.js";
 import MenuIllustration from "./illustrations.jsx";
 import { Arrow, Phone } from "../icons.jsx";
@@ -198,6 +198,20 @@ export default function MegaMenu({ open, onClose, top }) {
 
         {/* ── Mobile / tablet: accordion ── */}
         <nav className="flex-1 lg:hidden" aria-label="Sections">
+          <ul className="mega-row mb-4 flex flex-wrap gap-2" style={{ "--i": 0 }} aria-label="Quick links">
+            {quickLinks.filter((l) => routeIsLive(l.to)).map((l) => (
+              <li key={l.to}>
+                <Link
+                  to={l.to}
+                  onClick={onClose}
+                  aria-current={location.pathname === l.to ? "page" : undefined}
+                  className={`inline-block rounded-full border px-4 py-2 font-outfit text-sm transition-colors ${location.pathname === l.to ? "border-teal-400 text-teal-400" : "border-white/25 text-white/90 hover:border-teal-400 hover:text-teal-400"}`}
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
           <ul>
             {menu.map((s, idx) => {
               const on = expanded === idx;

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+import { quickLinks, routeIsLive } from "../data/site.js";
 import { usePageTransition } from "./layout/PageTransition.jsx";
 import { isAutoScrolling } from "../motion/tokens.js";
 import Logo from "./Logo.jsx";
@@ -168,6 +169,22 @@ export default function Header() {
             Right icon group — 4 buttons separated by thin vertical lines,
             matching TATA's: Search | Help | Person | Menu
           */}
+          <div className="flex h-full items-stretch">
+          {/* Quick links to the pages visitors look for most (desktop; phones get them atop the menu) */}
+          <nav aria-label="Quick links" className="hidden items-center gap-[clamp(1.25rem,2vw,2.25rem)] pr-[clamp(1.1rem,2.2vw,2.4rem)] lg:flex">
+            {quickLinks.filter((l) => routeIsLive(l.to)).map((l) => (
+              <NavLink
+                key={l.to}
+                to={l.to}
+                className={({ isActive }) =>
+                  `font-outfit text-[clamp(0.95rem,1.05vw,1.1rem)] tracking-wide transition-colors hover:text-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50 ${isActive ? "text-teal-400" : "text-[#f8f5ec]"}`
+                }
+              >
+                {l.label}
+              </NavLink>
+            ))}
+          </nav>
+
           <div className="flex h-16F gap-4 items-stretch divide-x divide-white/[0.30]">
             <HeaderIconBtn label="Search" aria-expanded={panel === "search"} onClick={() => toggle("search")}>
               <SearchIcon/>
@@ -192,6 +209,7 @@ export default function Header() {
             >
               <MenuIcon open={panel === "menu"} />
             </HeaderIconBtn>
+          </div>
           </div>
 
           <AccessibilityPanel open={panel === "a11y"} onClose={close} anchorRight="clamp(1.25rem,3vw,4rem)" />

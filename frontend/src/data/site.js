@@ -25,6 +25,14 @@ export function routeIsLive(to = "") {
   return !gate || liveSections[gate];
 }
 
+// Pages surfaced straight from the header (desktop) and the top of the menu
+// (phones), so visitors don't have to dig through the menu sections for them.
+export const quickLinks = [
+  { label: "About us", to: "/about" },
+  { label: "Gallery", to: "/media" },
+  { label: "Partners", to: "/partners" },
+];
+
 export function slugify(text) {
   return text
     .toLowerCase()
