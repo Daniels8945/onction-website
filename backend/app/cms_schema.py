@@ -426,9 +426,24 @@ def _check_value(field: dict, value: Any, path: str, verified: bool, out: list):
             out.append({"path": path, "level": "error", "message": f"{field['label']}: at least {field['min']} needed"})
         if field.get("max") and len(value) > field["max"]:
             out.append({"path": path, "level": "error", "message": f"{field['label']}: at most {field['max']} allowed"})
-        ids = [it.get("id") or it.get("slug") for it in value if isinstance(it, dict)]
-        if len([i for i in ids if i]) != len(set(i for i in ids if i)):
-            out.append({"path": path, "level": "error", "message": f"{field['label']}: two items share the same address/ID"})
+        # Flag every item whose address/ID clashes, on that item's own field, so
+        # the editor can point at it and the message names who it clashes with.
+        seen: dict[str, list[int]] = {}
+        for i, it in enumerate(value):
+            if isinstance(it, dict) and (it.get("id") or it.get("slug")):
+                seen.setdefault(it.get("id") or it.get("slug"), []).append(i)
+
+        def describe(i):
+            name = value[i].get(field.get("item_label") or "name") or value[i].get("title")
+            return f"item {i + 1}" + (f" ({name})" if isinstance(name, str) and name.strip() else "")
+
+        for dup_id, idxs in seen.items():
+            if len(idxs) < 2:
+                continue
+            for i in idxs:
+                key = "id" if value[i].get("id") else "slug"
+                others = ", ".join(describe(j) for j in idxs if j != i)
+                out.append({"path": f"{path}.{i}.{key}", "level": "error", "message": f"{field['label']}, {describe(i)}: address/ID “{dup_id}” is also used by {others} — give each a different one"})
         for i, it in enumerate(value):
             if not isinstance(it, dict):
                 out.append({"path": f"{path}.{i}", "level": "error", "message": "Invalid item"})
