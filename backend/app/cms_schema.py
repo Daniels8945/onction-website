@@ -244,7 +244,14 @@ COLLECTIONS: list[dict[str, Any]] = [
     {"key": "page.case-studies", "area": "Services & solutions", "label": "Case studies page", "used_on": used(("Case studies", "/case-studies")), "fields": [hero(), next_link()]},
     {"key": "page.partners", "area": "Partners & ecosystem", "label": "Partners page", "used_on": used(("Partners", "/partners")),
      "fields": [hero(), section("ecosystem", "Ecosystem section"), section("directory", "Directory section"), section("who", "Who we work with section", intro=False),
-                items("segments", "Kinds of partner", [text("title", "Title", max=50, required=True), area("offer", "What we offer", max=240, required=True)], fixed=4, item_label="title"),
+                items("segments", "Kinds of partner", [
+                    text("title", "Title", max=50, required=True), area("offer", "What we offer", max=240, required=True),
+                    items("logos", "Partner logos", [
+                        text("name", "Organisation name", max=80, required=True),
+                        image("logo", "Logo", required=True, help="SVG or transparent PNG; shown in its own proportions on a white tile."),
+                        link("url", "Official website"),
+                    ], max=12, item_label="name"),
+                ], fixed=4, item_label="title"),
                 group("workWith", "Closing invitation", [text("eyebrow", "Eyebrow", max=30), text("title", "Heading", max=80, required=True), text("accent", "Highlighted words", max=40), area("intro", "Text", max=400), text("cta", "Button text", max=30, required=True)]),
                 next_link()]},
     {"key": "page.contact", "area": "Contact & company", "label": "Contact page", "used_on": used(("Contact", "/contact")),
@@ -419,6 +426,8 @@ def _check_value(field: dict, value: Any, path: str, verified: bool, out: list):
             value = {}
         _check_fields(field["fields"], value, path, verified, out)
     elif t == "list":
+        # A list added after a document was saved is simply absent from it.
+        value = [] if value is None else value
         if not isinstance(value, list):
             out.append({"path": path, "level": "error", "message": f"{field['label']} must be a list"})
             return

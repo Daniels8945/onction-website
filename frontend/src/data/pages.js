@@ -9,6 +9,8 @@
 
 const hero = (title, accent, intro = "", image = "") => ({ title, accent, intro, image });
 const sec = (eyebrow, title, accent, intro = "") => ({ eyebrow, title, accent, intro });
+// Logos live in public/ so their addresses stay the same in saved content.
+const logo = (name, file, url = "") => ({ name, logo: `/partner-logos/${file}`, url });
 
 export const pageCopy = {
   about: {
@@ -101,10 +103,26 @@ export const pageCopy = {
     directory: sec("Directory", "Organisations across the value chain", "value chain", "Each organisation is listed under the relationship it actually has with Onction."),
     who: sec("Who we work with", "One desk, four kinds of partner", "four kinds"),
     segments: [
-      { title: "Generators & IPPs", offer: "A route to market for your output — offtake structuring, bilateral and cross-border sales, and smoother revenue for renewable projects." },
-      { title: "Utilities & distribution companies", offer: "Dependable supply, banking and swap arrangements to balance seasonal positions, and access to the wider WAPP market." },
-      { title: "Large commercial & industrial users", offer: "Bespoke supply contracts aggregated from multiple sources, priced to your load profile rather than a standard tariff." },
-      { title: "Developers & investors", offer: "Market-entry, regulatory and structuring support, counterparty introductions and investment facilitation for new capacity." },
+      {
+        title: "Generators & IPPs",
+        offer: "A route to market for your output — offtake structuring, bilateral and cross-border sales, and smoother revenue for renewable projects.",
+        logos: [logo("Niger Delta Power Holding Company", "ndphc.png"), logo("Mainstream Energy Solutions Limited", "mainstream-energy.jpg")],
+      },
+      {
+        title: "Utilities & distribution companies",
+        offer: "Dependable supply, banking and swap arrangements to balance seasonal positions, and access to the wider WAPP market.",
+        logos: [logo("Transmission Company of Nigeria", "tcn.png"), logo("Kano Electricity Distribution Plc", "kedco.png")],
+      },
+      {
+        title: "Large commercial & industrial users",
+        offer: "Bespoke supply contracts aggregated from multiple sources, priced to your load profile rather than a standard tariff.",
+        logos: [logo("Shongai Technologies Limited", "shongai-technologies.png")],
+      },
+      {
+        title: "Developers & investors",
+        offer: "Market-entry, regulatory and structuring support, counterparty introductions and investment facilitation for new capacity.",
+        logos: [logo("Access Bank", "access-bank.png"), logo("Chapel Hill Denham", "chapel-hill-denham.png")],
+      },
     ],
     workWith: {
       eyebrow: "Work with us",

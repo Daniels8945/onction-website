@@ -33,6 +33,23 @@ const SEGMENT_LINKS = [
   { sector: "International Developer", links: [["Advisory", "/solutions#advisory-and-consultancy"], ["Investment facilitation", "/solutions#investment-and-project-facilitation"]] },
 ];
 
+// Logos sit in identical tiles and keep their own proportions.
+function SegmentLogos({ logos }) {
+  return (
+    <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {logos.map((l) => {
+        const img = <img src={l.logo} alt={`${l.name} logo`} title={l.name} loading="lazy" className="max-h-14 max-w-[80%] object-contain" />;
+        const tile = "grid h-20 place-items-center border border-black/10 bg-white";
+        return (
+          <li key={l.name}>
+            {l.url ? <a href={l.url} target="_blank" rel="noopener noreferrer" className={`${tile} transition-colors duration-400 hover:border-teal-500`}>{img}</a> : <div className={tile}>{img}</div>}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export default function PartnersPage() {
   usePageMeta("Partners", "How generators, utilities, large consumers, developers and suppliers work with Onction Energy.");
   const portal = vendorPortalUrl();
@@ -86,6 +103,7 @@ export default function PartnersPage() {
                     <p className="font-outfit text-sm text-teal-600">{String(i + 1).padStart(2, "0")}</p>
                     <h3 className="mt-3 font-syne text-2xl font-medium text-navy-900">{s.title}</h3>
                     <p className="mt-3 leading-relaxed text-slatey">{s.offer}</p>
+                    {s.logos?.length > 0 && <SegmentLogos logos={s.logos} />}
                     {quote && (
                       <blockquote className="mt-6 border-l-2 border-teal-500 pl-4 text-sm italic leading-relaxed text-navy-900/80">
                         “{quote.quote.split(". ")[0]}.”

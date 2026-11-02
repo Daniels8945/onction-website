@@ -129,6 +129,17 @@ for (const slug of Object.keys(pageCopy)) {
 // The approved content, captured before anything is applied.
 const BUILT_IN = Object.fromEntries(Object.entries(AREAS).map(([k, a]) => [k, a.get()]));
 
+// Partners content saved before logos existed has none on its segments; those
+// keep the built-in logos. An empty list means an editor removed them.
+AREAS["page.partners"].apply = (d) => assignObject(pageCopy.partners, withContentDefaults("page.partners", d));
+
+/** Fills in what content saved by an older version of the site doesn't have. */
+export function withContentDefaults(key, data) {
+  if (key !== "page.partners" || !Array.isArray(data?.segments)) return data;
+  const base = BUILT_IN[key].segments;
+  return { ...data, segments: data.segments.map((s, i) => ({ logos: clone(base[i]?.logos || []), ...s })) };
+}
+
 export const managedKeys = Object.keys(AREAS);
 
 /** The site's own content for an area, in the CMS's shape. */

@@ -10,7 +10,7 @@ import { Alert, Badge, Button, Drawer, EmptyState, Modal, PageHeader, Panel, Ske
 import FieldEditor from "../../content/FieldEditor.jsx";
 import { diffContent } from "../../content/diff.js";
 import { STATUS, useSchema } from "../../content/useSchema.js";
-import { builtIn } from "../../../cms/registry.js";
+import { builtIn, withContentDefaults } from "../../../cms/registry.js";
 import HelpLink from "../../components/HelpLink.jsx";
 
 // The Help Centre guide for a content area: a specific one where it exists.
@@ -83,7 +83,7 @@ export default function ContentEditorPage() {
     adminApi
       .get(`/api/content/docs/${key}`)
       .then((d) => {
-        const initial = d.draft ?? d.published ?? builtIn(key) ?? {};
+        const initial = withContentDefaults(key, d.draft ?? d.published ?? builtIn(key) ?? {});
         setDoc(d);
         setData(initial);
         setSaved(JSON.stringify(initial));

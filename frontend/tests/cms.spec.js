@@ -196,6 +196,28 @@ test("partners: a verified organisation appears in the directory under its role"
   await expect(page.locator("#directory").getByText("Generation company")).toBeVisible();
 });
 
+test("partners: kinds of partner carry editable logos, and older content keeps the built-in ones", async ({ page, request }) => {
+  const t = await signIn(page, request, "admin");
+  await page.goto(`${BASE}/admin/content/page.partners`);
+  await page.getByRole("button", { name: "Generators & IPPs", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Niger Delta Power Holding Company", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Add partner logo" }).first().click();
+  await page.getByLabel("Organisation name").last().fill("Acme Generation Ltd");
+  await page.getByRole("button", { name: "Save draft" }).click();
+  await expect(page.getByText("Logo is required").first()).toBeVisible();
+
+  const copy = { hero: { title: "Partners" }, ecosystem: { title: "E" }, directory: { title: "D" }, who: { title: "W" }, workWith: { title: "T", cta: "Go" }, next: { title: "N" } };
+  const segment = (title) => ({ title, offer: "What we offer." });
+  const acme = { name: "Acme Generation Ltd", logo: "/partner-logos/tcn.png", url: "https://example.com" };
+  await publishVia(request, t, "page.partners", { ...copy, segments: [{ ...segment("One"), logos: [acme] }, { ...segment("Two"), logos: [] }, segment("Three"), segment("Four")] });
+  await page.goto(`${BASE}/partners`);
+  const who = page.locator("#who");
+  await expect(who.getByRole("link", { name: "Acme Generation Ltd logo" })).toHaveAttribute("href", "https://example.com");
+  await expect(who.getByAltText("Niger Delta Power Holding Company logo")).toHaveCount(0); // replaced
+  await expect(who.getByAltText("Kano Electricity Distribution Plc logo")).toHaveCount(0); // removed on purpose
+  await expect(who.getByAltText("Access Bank logo")).toBeVisible(); // saved before logos existed
+});
+
 test("navigation: links can be hidden, but Contact can't be", async ({ page, request }) => {
   const t = await token(request, "super");
   const h = { Authorization: `Bearer ${t}` };

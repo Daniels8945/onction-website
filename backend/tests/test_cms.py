@@ -116,6 +116,17 @@ def test_fixed_lists_keep_their_length():
     assert any("exactly 6" in i["message"] for i in validate("home.highlights", data))
 
 
+def test_partner_logos_are_optional_but_complete_when_added():
+    page = {"hero": {"title": "T"}, "ecosystem": {"title": "T"}, "directory": {"title": "T"}, "who": {"title": "T"},
+            "workWith": {"title": "T", "cta": "Go"}, "next": {"title": "T"}}
+    segment = {"title": "Generators", "offer": "A route to market"}
+    # content saved before logos existed has no `logos` key at all
+    assert not [i for i in validate("page.partners", {**page, "segments": [segment] * 4}) if i["level"] == "error"]
+    bad = {**segment, "logos": [{"name": "Acme", "logo": ""}]}
+    issues = validate("page.partners", {**page, "segments": [bad, segment, segment, segment]})
+    assert [i["path"] for i in issues if i["level"] == "error"] == ["segments.0.logos.0.logo"]
+
+
 def test_verified_profiles_need_name_and_portrait():
     item = {"id": "jane", "group": "board", "title": "Director", "verified": True}
     msgs = [i["message"] for i in validate("leadership.people", {"items": [item]})]

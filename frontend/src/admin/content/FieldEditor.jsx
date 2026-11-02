@@ -72,11 +72,11 @@ function MediaField({ field, value, onChange, disabled }) {
   return (
     <div className="flex items-center gap-3">
       <div className="grid h-16 w-24 shrink-0 place-items-center overflow-hidden rounded-md bg-mist ring-1 ring-black/5">
-        {value ? (kind === "image" ? <img src={value} alt="" className="h-full w-full object-cover" /> : <Icon size={20} className="text-slatey" />) : <span className="px-1 text-center text-[10px] leading-tight text-slatey">Built-in</span>}
+        {value ? (kind === "image" ? <img src={value} alt="" className={cx("h-full w-full", field.name === "logo" ? "bg-white object-contain p-1" : "object-cover")} /> : <Icon size={20} className="text-slatey" />) : <span className="px-1 text-center text-[10px] leading-tight text-slatey">{field.required ? "None" : "Built-in"}</span>}
       </div>
       <div className="flex flex-wrap gap-2">
         <Button size="sm" icon={Icon} onClick={() => setPicking(true)} disabled={disabled}>{value ? "Replace" : "Choose"}</Button>
-        {value && <Button size="sm" variant="ghost" onClick={() => onChange("")} disabled={disabled}>{field.required_if_verified ? "Remove" : "Use built-in"}</Button>}
+        {value && <Button size="sm" variant="ghost" onClick={() => onChange("")} disabled={disabled}>{field.required || field.required_if_verified ? "Remove" : "Use built-in"}</Button>}
       </div>
       {picking && <MediaPicker kind={kind} currentUrl={value} onClose={() => setPicking(false)} onSelect={(url) => { onChange(url); setPicking(false); }} />}
     </div>

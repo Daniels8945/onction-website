@@ -232,6 +232,7 @@ export const TOPICS = [
     steps: [
       { title: "Add an organisation", detail: "Organisation name, Market role, Relationship and a Logo if you have one. “Feature this relationship” highlights it." },
       { title: "Verify and publish", detail: "Turn on Verified once the relationship is confirmed, then Review & publish." },
+      { title: "Add a logo to a kind of partner", detail: "Open Partners page → Kinds of partner, choose one of the four, then Add partner logo under Partner logos. Give the organisation name and logo, then Review & publish. Logos here go live on publishing; there is no Verified switch." },
     ],
     warnings: ["Only list organisations that have agreed to be shown as partners."],
     related: ["website-content"],
